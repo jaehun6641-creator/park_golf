@@ -3,1108 +3,384 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>독수리 파크골프</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#10b981">
+    <title>파크골프 프로 v5</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #2e7d32;
+            --bg: #f4f7f6;
+            --played-all: #ffd600; 
+            --played-part: #f8bbd0;
+            --not-played: #ffffff;
+            --danger: #d32f2f;
+            --accent: #1976d2;
+            --win-color: #fb8c00;
+            --draw-color: #78909c;
+            --fail-color: #8d6e63;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
-            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-            min-height: 100vh;
-            padding: 1rem;
-        }
+        body { font-family: 'Pretendard', sans-serif; margin: 0; background: var(--bg); color: #212121; -webkit-tap-highlight-color: transparent; }
+        header { background: var(--primary); color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        nav { display: flex; justify-content: space-around; }
+        nav button { background: none; border: none; color: rgba(255,255,255,0.7); padding: 15px; font-weight: bold; font-size: 16px; }
+        nav button.active { color: white; border-bottom: 4px solid var(--played-all); }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding-top: 2rem;
-        }
+        .container { padding: 15px; max-width: 480px; margin: 0 auto; }
+        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
 
-        .card {
-            background: white;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1rem;
-        }
+        /* 코스 버튼 상태 */
+        .course-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .course-btn { padding: 20px 5px; border: 1px solid #ddd; border-radius: 15px; font-weight: bold; font-size: 15px; transition: 0.2s; }
+        .course-btn.status-all { background: var(--played-all); border-color: #fbc02d; }
+        .course-btn.status-part { background: var(--played-part); border-color: #f06292; }
+        .course-btn.status-none { background: var(--not-played); }
 
-        .title {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #047857;
-            text-align: center;
-            margin-bottom: 0.5rem;
-        }
+        /* 홀 인디케이터 */
+        .hole-indicator { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-bottom: 15px; }
+        .hole-dot { aspect-ratio: 1/1; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; background: #eee; border: 1.5px solid #ddd; }
+        .hole-dot.active { border-color: var(--primary); background: white; color: var(--primary); box-shadow: 0 0 8px rgba(46,125,50,0.3); }
+        .hole-dot.played { background: var(--played-all); border-color: #fbc02d; }
 
-        .subtitle {
-            text-align: center;
-            color: #059669;
-            margin-bottom: 2rem;
-        }
+        /* 버튼 */
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .btn-big { height: 55px; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .btn-nav { background: #e8f5e9; color: var(--primary); border: 1px solid #c8e6c9; }
+        .btn-result { background: #546e7a; color: white; }
+        .btn-save { background: var(--accent); color: white; }
+        .btn-next-course { background: #455a64; color: white; width: 100%; margin-top: 10px; height: 60px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
-        .btn {
-            width: 100%;
-            padding: 1rem;
-            border: none;
-            border-radius: 0.5rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 0.75rem;
-            transition: all 0.2s;
-        }
+        /* 플레이어 버튼 */
+        .player-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .p-btn { padding: 12px; border: 1.5px solid #eee; background: #fafafa; border-radius: 15px; font-size: 15px; font-weight: 600; }
+        .p-btn.selected { background: var(--played-all); border-color: #fbc02d; font-weight: 800; transform: scale(1.02); }
 
-        .btn-primary {
-            background: #10b981;
-            color: white;
+        /* 기록 그래픽 배지 */
+        .badge-group { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+        .g-badge { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 4px; }
+        .g-win { background: #fff3e0; color: var(--win-color); border: 1px solid #ffe0b2; }
+        .g-draw { background: #eceff1; color: var(--draw-color); border: 1px solid #cfd8dc; }
+        .g-fail { background: #efebe9; color: var(--fail-color); border: 1px solid #d7ccc8; }
+        
+        .penalty-highlight { 
+            background: #fff5f5; border: 2.5px solid var(--danger); color: var(--danger);
+            padding: 10px; border-radius: 15px; text-align: center; min-width: 90px;
         }
+        .penalty-val { font-size: 20px; font-weight: 900; display: block; }
+        .penalty-label { font-size: 11px; font-weight: bold; }
 
-        .btn-primary:hover {
-            background: #059669;
-        }
-
-        .btn-primary:active {
-            background: #047857;
-            transform: scale(0.98);
-        }
-
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
-        }
-
-        .btn-secondary:hover {
-            background: #d1d5db;
-        }
-
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-        }
-
-        .btn-small {
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-            width: auto;
-        }
-
-        .input-field {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #d1d5db;
-            border-radius: 0.5rem;
-            font-size: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .input-field:focus {
-            outline: none;
-            border-color: #10b981;
-        }
-
-        .player-item {
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border: 2px solid #e5e7eb;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            transition: all 0.2s;
-        }
-
-        .player-item.active {
-            border-color: #10b981;
-            background: #ecfdf5;
-        }
-
-        .player-item input[type="checkbox"] {
-            width: 1.25rem;
-            height: 1.25rem;
-            cursor: pointer;
-        }
-
-        .player-name {
-            flex: 1;
-            font-weight: 500;
-        }
-
-        .course-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .course-btn {
-            padding: 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 0.5rem;
-            background: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .course-btn.selected {
-            background: #10b981;
-            color: white;
-            border-color: #10b981;
-        }
-
-        .course-btn.has-data {
-            background: linear-gradient(135deg, white 0%, #dbeafe 100%);
-            border-color: #3b82f6;
-        }
-
-        .course-btn.has-data.selected {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            border-color: #10b981;
-        }
-
-        .player-btn {
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            border: 2px solid #e5e7eb;
-            background: white;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .player-btn.winner {
-            background: #fbbf24;
-            color: #78350f;
-            border-color: #fbbf24;
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
-        }
-
-        .player-btn.draw {
-            background: #60a5fa;
-            color: #1e3a8a;
-            border-color: #60a5fa;
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
-        }
-
-        .player-btn.allfail {
-            background: #f87171;
-            color: #7f1d1d;
-            border-color: #f87171;
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(248, 113, 113, 0.4);
-        }
-
-        .hole-indicator {
-            display: grid;
-            grid-template-columns: repeat(9, 1fr);
-            gap: 0.25rem;
-            margin-top: 1rem;
-        }
-
-        .hole-dot {
-            aspect-ratio: 1;
-            border-radius: 0.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .hole-dot.current {
-            background: #10b981;
-            color: white;
-        }
-
-        .hole-dot.completed {
-            background: #d1fae5;
-            color: #047857;
-        }
-
-        .hole-dot.pending {
-            background: #e5e7eb;
-            color: #9ca3af;
-        }
-
-        .stats-card {
-            padding: 1rem;
-            background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%);
-            border: 2px solid #10b981;
-            border-radius: 0.75rem;
-            margin-bottom: 1rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
-            margin-top: 0.75rem;
-        }
-
-        .stat-item {
-            text-align: center;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-        }
-
-        .stat-label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-value {
-            font-size: 1.25rem;
-            font-weight: bold;
-        }
-
-        .record-card {
-            border: 2px solid #e5e7eb;
-            border-radius: 0.75rem;
-            overflow: hidden;
-            margin-bottom: 1rem;
-        }
-
-        .record-header {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .record-body {
-            padding: 1rem;
-            background: white;
-        }
-
-        .record-player {
-            padding: 0.75rem;
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .info-box {
-            padding: 1rem;
-            background: #dbeafe;
-            border-radius: 0.5rem;
-            margin-top: 1rem;
-            font-size: 0.875rem;
-            color: #1e40af;
-        }
-
-        .header-buttons {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div class="container" id="app">
-        <!-- 메인 메뉴 -->
-        <div id="mainMenu">
-            <h1 class="title">⛳ 독수리 파크골프</h1>
-            <p class="subtitle">2025 All right Reserved 오재훈</p>
-            <div class="card">
-                <button class="btn btn-primary" onclick="showPage('players')">👥 플레이어 관리</button>
-                <button class="btn btn-primary" onclick="showPage('game')">🎮 게임 시작</button>
-                <button class="btn btn-primary" onclick="showPage('records')">📊 게임 기록</button>
-                <button class="btn btn-secondary" onclick="exitApp()">❌ 종료</button>
-            </div>
-            <div style="text-align: center; margin-top: 2rem; color: #6b7280; font-size: 0.875rem;">
-                v1.0.0
-            </div>
-        </div>
 
-        <!-- 플레이어 관리 -->
-        <div id="playersPage" class="hidden">
-            <div class="header-buttons">
-                <button class="btn btn-secondary btn-small" onclick="showPage('main')">← 돌아가기</button>
-            </div>
+<div id="app">
+    <header>
+        <nav>
+            <button onclick="showScreen('player')" id="nav-player">플레이어</button>
+            <button onclick="showScreen('game-setup')" id="nav-game">게임</button>
+            <button onclick="showScreen('records')" id="nav-records">기록</button>
+            <button onclick="exitApp()">종료</button>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section id="screen-player" class="screen">
+            <h3 style="margin: 0 0 15px 5px;">플레이어 등록</h3>
+            <div id="player-inputs"></div>
+        </section>
+
+        <section id="screen-game-setup" class="screen hidden">
             <div class="card">
-                <h2 style="font-size: 1.5rem; font-weight: bold; color: #047857; margin-bottom: 1.5rem;">
-                    👥 플레이어 관리
-                </h2>
-                <div id="playersList"></div>
-                <div class="info-box">
-                    💡 체크박스를 선택하여 게임에 참가할 플레이어를 지정하세요. 최대 6명까지 참가 가능합니다.
+                <label style="font-weight: bold;">홀당 벌금액 설정</label>
+                <div style="margin-top:10px; display: flex; align-items: center; gap: 10px;">
+                    <input type="number" id="penalty-input" value="500" style="flex:1; padding:12px; border:2px solid var(--primary); border-radius:10px; font-size:18px; font-weight:bold; text-align: right;">
+                    <span style="font-weight:bold;">원</span>
                 </div>
             </div>
-        </div>
+            <h4 style="margin: 20px 0 10px 5px;">코스 선택 <span style="font-weight:normal; font-size:12px; color:#999;">(완료:노랑, 진행중:분홍)</span></h4>
+            <div class="course-grid" id="course-btns"></div>
+        </section>
 
-        <!-- 게임 설정 -->
-        <div id="gameSetup" class="hidden">
-            <div class="header-buttons">
-                <button class="btn btn-secondary btn-small" onclick="showPage('main')">← 돌아가기</button>
-            </div>
-            <div class="card">
-                <h2 style="font-size: 1.5rem; font-weight: bold; color: #047857; margin-bottom: 1.5rem;">
-                    🎮 게임 설정
-                </h2>
-                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">벌금 금액</label>
-                <input type="number" id="penaltyInput" class="input-field" value="500" step="100">
-                
-                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">코스 선택</label>
-                <div class="course-grid" id="courseGrid"></div>
-                
-                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">참가 플레이어</label>
-                <div id="activePlayersList"></div>
-                
-                <button class="btn btn-primary" onclick="startGame()" style="margin-top: 1rem;">게임 시작</button>
-            </div>
-        </div>
+        <section id="screen-game-play" class="screen hidden">
+            <div class="hole-indicator" id="hole-indicator"></div>
+            <h2 id="display-hole-title" style="margin:0 0 15px 0; font-size: 24px; color: var(--primary);">1코스 - 1홀</h2>
 
-        <!-- 게임 진행 -->
-        <div id="gamePlaying" class="hidden">
-            <div class="header-buttons">
-                <button class="btn btn-secondary btn-small" onclick="showPage('game')">← 설정으로</button>
-                <button class="btn btn-secondary btn-small" onclick="showCurrentResult()">📊 결과 보기</button>
+            <div class="btn-row">
+                <button onclick="changeHole(-1)" class="btn-big btn-nav">◀ 이전홀</button>
+                <button onclick="changeHole(1)" class="btn-big btn-nav">다음홀 ▶</button>
             </div>
-            <div class="card">
-                <h2 id="holeTitle" style="font-size: 1.75rem; font-weight: bold; color: #047857; text-align: center; margin-bottom: 0.5rem;"></h2>
-                <p style="text-align: center; color: #6b7280; margin-bottom: 1.5rem;">1등 플레이어를 선택하세요</p>
-                
-                <div id="playersGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1.5rem;"></div>
-                
-                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                    <button class="btn btn-secondary" onclick="prevHole()" id="prevBtn" style="flex: 1;">← 이전 홀</button>
-                    <button class="btn btn-primary" onclick="nextHole()" id="nextBtn" style="flex: 1;">다음 홀 →</button>
-                </div>
-                
-                <div class="hole-indicator" id="holeIndicator"></div>
-            </div>
-        </div>
 
-        <!-- 게임 결과 -->
-        <div id="gameResult" class="hidden">
-            <div class="header-buttons">
-                <button class="btn btn-secondary btn-small" onclick="backToGame()">← 게임으로</button>
-            </div>
-            <div class="card">
-                <h2 style="font-size: 1.5rem; font-weight: bold; color: #047857; text-align: center; margin-bottom: 1.5rem;">
-                    🏆 게임 결과
-                </h2>
-                <div id="resultStats"></div>
-                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                    <button class="btn btn-primary" onclick="showPage('main')" style="flex: 1;">메인으로</button>
-                    <button class="btn btn-secondary" onclick="newGame()" style="flex: 1;">다음 게임</button>
+            <div class="card" style="padding: 15px;">
+                <div id="play-player-btns" class="player-grid"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; padding-top: 15px; border-top: 1px dashed #ddd;">
+                    <button class="p-btn" style="background:#f5f5f5" id="spec-draw" onclick="toggleSpecial('draw')">무승부</button>
+                    <button class="p-btn" style="background:#f5f5f5" id="spec-fail" onclick="toggleSpecial('fail')">모두실패</button>
                 </div>
             </div>
-        </div>
 
-        <!-- 게임 기록 -->
-        <div id="recordsPage" class="hidden">
-            <div class="header-buttons">
-                <button class="btn btn-secondary btn-small" onclick="showPage('main')">← 돌아가기</button>
+            <div class="btn-row">
+                <button onclick="showResult()" class="btn-big btn-result">📊 결과보기</button>
+                <button onclick="saveCurrentGame(true)" class="btn-big btn-save">💾 게임저장</button>
             </div>
-            <div class="card">
-                <h2 style="font-size: 1.5rem; font-weight: bold; color: #047857; margin-bottom: 1.5rem;">
-                    📊 게임 기록
-                </h2>
-                
-                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                    <button class="btn btn-secondary btn-small" onclick="exportData()" style="flex: 1;">
-                        📥 데이터 내보내기
-                    </button>
-                    <button class="btn btn-secondary btn-small" onclick="importData()" style="flex: 1;">
-                        📤 데이터 가져오기
-                    </button>
-                </div>
-                
-                <div id="recordsList"></div>
-            </div>
-        </div>
+            <button onclick="nextCourseAction()" class="btn-big btn-next-course">⛳ 다음코스 선택</button>
+        </section>
+
+        <section id="screen-result" class="screen hidden">
+            <h3 style="margin-left:5px;">코스별 성적표</h3>
+            <div id="result-list"></div>
+            <button onclick="showScreen('game-play')" class="btn-big btn-save" style="width:100%; margin-top:10px;">게임 화면으로 돌아가기</button>
+        </section>
+
+        <section id="screen-records" class="screen hidden">
+            <h3 style="margin-left:5px;">누적 벌금 리포트</h3>
+            <div id="history-container"></div>
+        </section>
     </div>
+</div>
 
-    <script>
-        // 데이터 저장소
-        const STORAGE_KEYS = {
-            PLAYERS: 'parkgolf_players',
-            GAMES: 'parkgolf_games',
-            PENALTY: 'parkgolf_penalty'
-        };
+<script>
+    let state = {
+        players: ["플레이어1", "플레이어2", "플레이어3", "플레이어4", "", ""],
+        selectedIdx: [0, 1, 2, 3],
+        penalty: 500,
+        currentCourse: 1,
+        currentHole: 1,
+        courseData: {} 
+    };
 
-        // 앱 상태
-        let players = [];
-        let currentCourse = 1;
-        let currentHole = 1;
-        let winners = {};
-        let penalty = 500;
-
-        // 초기화
-        function init() {
-            loadPlayers();
-            loadPenalty();
-            showPage('main');
+    function init() {
+        const saved = localStorage.getItem('parkGolf_v5');
+        if(saved) {
+            state = JSON.parse(saved);
+            document.getElementById('penalty-input').value = state.penalty;
         }
+        renderPlayerSetup();
+        renderCourseBtns();
+        showScreen('player');
+    }
 
-        // 플레이어 로드
-        function loadPlayers() {
-            const saved = localStorage.getItem(STORAGE_KEYS.PLAYERS);
-            if (saved) {
-                players = JSON.parse(saved);
-            } else {
-                players = Array.from({ length: 6 }, (_, i) => ({
-                    id: `player-${i + 1}`,
-                    name: `플레이어${i + 1}`,
-                    isActive: false
-                }));
-                savePlayers();
+    function saveToLocal() {
+        state.penalty = parseInt(document.getElementById('penalty-input').value) || 500;
+        localStorage.setItem('parkGolf_v5', JSON.stringify(state));
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+        document.getElementById('screen-' + id).classList.remove('hidden');
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        const navBtn = document.getElementById('nav-' + id.split('-')[0]);
+        if(navBtn) navBtn.classList.add('active');
+        if(id === 'game-setup') renderCourseBtns();
+        if(id === 'records') renderHistory();
+    }
+
+    function renderPlayerSetup() {
+        const container = document.getElementById('player-inputs');
+        container.innerHTML = '';
+        state.players.forEach((name, i) => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.style = "display:flex; gap:15px; align-items:center; padding:15px; margin-bottom:10px;";
+            div.innerHTML = `
+                <input type="text" value="${name}" onchange="state.players[${i}]=this.value; saveToLocal();" placeholder="이름" style="flex:1; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:16px;">
+                <input type="checkbox" style="width:25px; height:25px;" ${state.selectedIdx.includes(i) ? 'checked' : ''} onchange="togglePlayer(${i})">
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function togglePlayer(i) {
+        if(state.selectedIdx.includes(i)) state.selectedIdx = state.selectedIdx.filter(idx => idx !== i);
+        else state.selectedIdx.push(i);
+        saveToLocal();
+    }
+
+    function renderCourseBtns() {
+        const container = document.getElementById('course-btns');
+        container.innerHTML = '';
+        for(let i=1; i<=12; i++) {
+            const btn = document.createElement('button');
+            const data = state.courseData[i];
+            let statusClass = 'status-none';
+            if(data) {
+                const playedHoles = data.filter(h => h.winners.length > 0 || h.draw || h.fail).length;
+                if(playedHoles === 9) statusClass = 'status-all';
+                else if(playedHoles > 0) statusClass = 'status-part';
             }
+            btn.className = `course-btn ${statusClass}`;
+            btn.innerText = i + "코스";
+            btn.onclick = () => startCourse(i);
+            container.appendChild(btn);
+        }
+    }
+
+    function startCourse(cIdx) {
+        state.currentCourse = cIdx;
+        state.currentHole = 1;
+        state.penalty = parseInt(document.getElementById('penalty-input').value) || 500;
+        if(!state.courseData[cIdx]) {
+            state.courseData[cIdx] = Array(10).fill(null).map(() => ({ winners: [], draw: false, fail: false }));
+        }
+        showScreen('game-play');
+        updatePlayUI();
+    }
+
+    function updatePlayUI() {
+        const cIdx = state.currentCourse;
+        const hIdx = state.currentHole;
+        const data = state.courseData[cIdx][hIdx];
+        document.getElementById('display-hole-title').innerText = `${cIdx}코스 - ${hIdx}홀`;
+        
+        const indicator = document.getElementById('hole-indicator');
+        indicator.innerHTML = '';
+        for(let i=1; i<=9; i++) {
+            const dot = document.createElement('div');
+            const hData = state.courseData[cIdx][i];
+            const isPlayed = (hData.winners.length > 0 || hData.draw || hData.fail);
+            dot.className = `hole-dot ${i === hIdx ? 'active' : ''} ${isPlayed ? 'played' : ''}`;
+            dot.innerText = i;
+            dot.onclick = () => { state.currentHole = i; updatePlayUI(); };
+            indicator.appendChild(dot);
         }
 
-        // 플레이어 저장
-        function savePlayers() {
-            localStorage.setItem(STORAGE_KEYS.PLAYERS, JSON.stringify(players));
-        }
+        const pContainer = document.getElementById('play-player-btns');
+        pContainer.innerHTML = '';
+        state.selectedIdx.forEach(idx => {
+            const btn = document.createElement('button');
+            btn.className = `p-btn ${data.winners.includes(idx) ? 'selected' : ''}`;
+            btn.innerText = state.players[idx] || `선수${idx+1}`;
+            btn.onclick = () => toggleWinner(idx);
+            pContainer.appendChild(btn);
+        });
 
-        // 벌금 로드
-        function loadPenalty() {
-            const saved = localStorage.getItem(STORAGE_KEYS.PENALTY);
-            penalty = saved ? parseInt(saved) : 500;
-        }
+        document.getElementById('spec-draw').className = `p-btn ${data.draw ? 'selected' : ''}`;
+        document.getElementById('spec-fail').className = `p-btn ${data.fail ? 'selected' : ''}`;
+        saveToLocal();
+    }
 
-        // 벌금 저장
-        function savePenalty() {
-            localStorage.setItem(STORAGE_KEYS.PENALTY, penalty.toString());
-        }
+    function changeHole(dir) {
+        const nextH = state.currentHole + dir;
+        if(nextH >= 1 && nextH <= 9) { state.currentHole = nextH; updatePlayUI(); }
+    }
 
-        // 페이지 전환
-        function showPage(page) {
-            document.querySelectorAll('#app > div').forEach(div => div.classList.add('hidden'));
-            
-            switch(page) {
-                case 'main':
-                    document.getElementById('mainMenu').classList.remove('hidden');
-                    break;
-                case 'players':
-                    document.getElementById('playersPage').classList.remove('hidden');
-                    renderPlayersList();
-                    break;
-                case 'game':
-                    document.getElementById('gameSetup').classList.remove('hidden');
-                    renderGameSetup();
-                    break;
-                case 'records':
-                    document.getElementById('recordsPage').classList.remove('hidden');
-                    renderRecords();
-                    break;
-            }
-        }
+    function toggleWinner(idx) {
+        const data = state.courseData[state.currentCourse][state.currentHole];
+        data.draw = false; data.fail = false;
+        if(data.winners.includes(idx)) data.winners = data.winners.filter(v => v !== idx);
+        else data.winners.push(idx);
+        updatePlayUI();
+    }
 
-        // 플레이어 목록 렌더링
-        function renderPlayersList() {
-            const list = document.getElementById('playersList');
-            list.innerHTML = players.map(player => `
-                <div class="player-item ${player.isActive ? 'active' : ''}">
-                    <input type="checkbox" ${player.isActive ? 'checked' : ''} 
-                           onchange="togglePlayer('${player.id}')">
-                    <input type="text" class="player-name" value="${player.name}" 
-                           onchange="updatePlayerName('${player.id}', this.value)"
-                           onblur="updatePlayerName('${player.id}', this.value)"
-                           placeholder="이름 입력"
-                           style="border: none; background: transparent; font-size: 1rem;">
-                </div>
-            `).join('');
-        }
+    function toggleSpecial(type) {
+        const data = state.courseData[state.currentCourse][state.currentHole];
+        data.winners = [];
+        if(type === 'draw') { data.draw = !data.draw; data.fail = false; }
+        else { data.fail = !data.fail; data.draw = false; }
+        updatePlayUI();
+    }
 
-        // 플레이어 활성화 토글
-        function togglePlayer(id) {
-            const player = players.find(p => p.id === id);
-            if (player) {
-                player.isActive = !player.isActive;
-                savePlayers();
-                renderPlayersList();
-            }
-        }
-
-        // 플레이어 이름 수정
-        function updatePlayerName(id, name) {
-            const player = players.find(p => p.id === id);
-            if (player) {
-                const trimmedName = name.trim();
-                if (trimmedName.length === 0) {
-                    alert('플레이어 이름을 입력해주세요.');
-                    renderPlayersList();
-                    return;
-                }
-                if (trimmedName.length > 10) {
-                    alert('플레이어 이름은 10자 이하로 입력해주세요.');
-                    renderPlayersList();
-                    return;
-                }
-                player.name = trimmedName;
-                savePlayers();
-                renderPlayersList();
-            }
-        }
-
-        // 게임 설정 렌더링
-        function renderGameSetup() {
-            document.getElementById('penaltyInput').value = penalty;
-            
-            // 코스 버튼
-            const courseGrid = document.getElementById('courseGrid');
-            courseGrid.innerHTML = Array.from({ length: 9 }, (_, i) => i + 1)
-                .map(course => {
-                    const todayGame = getTodayGameByCourse(course);
-                    const hasData = todayGame !== null;
-                    
-                    return `
-                        <button class="course-btn ${course === currentCourse ? 'selected' : ''} ${hasData ? 'has-data' : ''}"
-                                onclick="selectCourse(${course})">
-                            ${course}코스${hasData ? ' 📝' : ''}
-                        </button>
-                    `;
-                }).join('');
-            
-            // 활성 플레이어 목록
-            const activePlayers = players.filter(p => p.isActive);
-            const activeList = document.getElementById('activePlayersList');
-            if (activePlayers.length === 0) {
-                activeList.innerHTML = '<p style="color: #ef4444; margin: 1rem 0;">플레이어 관리에서 참가자를 선택해주세요.</p>';
-            } else {
-                activeList.innerHTML = activePlayers.map(player => `
-                    <div style="padding: 0.75rem; background: #ecfdf5; border: 1px solid #10b981; border-radius: 0.5rem; margin-bottom: 0.5rem;">
-                        <span style="font-weight: 500; color: #047857;">${player.name}</span>
-                    </div>
-                `).join('');
-            }
-            
-            // 선택된 코스에 당일 게임이 있으면 알림
-            const todayGame = getTodayGameByCourse(currentCourse);
-            if (todayGame) {
-                activeList.innerHTML += `
-                    <div style="padding: 1rem; background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.5rem; margin-top: 1rem;">
-                        <div style="font-weight: 600; color: #1e40af; margin-bottom: 0.5rem;">
-                            📝 오늘 이 코스의 저장된 기록이 있습니다!
-                        </div>
-                        <button class="btn btn-secondary btn-small" onclick="loadTodayGame(${currentCourse})" style="width: 100%;">
-                            이전 기록 불러오기
-                        </button>
-                    </div>
-                `;
-            }
-        }
-
-        // 코스 선택
-        function selectCourse(course) {
-            currentCourse = course;
-            renderGameSetup();
-        }
-
-        // 당일 특정 코스의 게임 찾기
-        function getTodayGameByCourse(course) {
-            const games = JSON.parse(localStorage.getItem(STORAGE_KEYS.GAMES) || '[]');
-            const today = new Date();
-            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            
-            // 오늘 날짜의 해당 코스 게임 찾기 (가장 최근 것)
-            const todayGames = games.filter(game => {
-                const gameDate = new Date(game.date);
-                const gameDateStr = `${gameDate.getFullYear()}-${String(gameDate.getMonth() + 1).padStart(2, '0')}-${String(gameDate.getDate()).padStart(2, '0')}`;
-                return gameDateStr === todayStr && game.course === course;
-            });
-            
-            return todayGames.length > 0 ? todayGames[todayGames.length - 1] : null;
-        }
-
-        // 당일 게임 불러오기
-        function loadTodayGame(course) {
-            const game = getTodayGameByCourse(course);
-            if (!game) {
-                alert('불러올 게임이 없습니다.');
-                return;
-            }
-            
-            if (!confirm('이전에 저장된 게임 기록을 불러오시겠습니까?\n(현재 입력 중인 내용은 사라집니다)')) {
-                return;
-            }
-            
-            // 게임 데이터 복원
-            currentCourse = game.course;
-            penalty = game.penalty;
-            winners = { ...game.winners };
-            currentHole = 1;
-            
-            // 참가자 복원
-            players.forEach(p => {
-                p.isActive = game.participants.some(participant => participant.id === p.id);
-            });
-            savePlayers();
-            
-            alert('✅ 이전 게임 기록을 불러왔습니다!\n게임을 계속 진행하거나 수정할 수 있습니다.');
-            
-            // 게임 진행 화면으로 전환
-            document.getElementById('gameSetup').classList.add('hidden');
-            document.getElementById('gamePlaying').classList.remove('hidden');
-            renderGamePlaying();
-        }
-
-        // 게임 시작
-        function startGame() {
-            const activePlayers = players.filter(p => p.isActive);
-            if (activePlayers.length === 0) {
-                alert('게임에 참가할 플레이어를 선택해주세요.');
-                return;
-            }
-            
-            const penaltyValue = parseInt(document.getElementById('penaltyInput').value);
-            if (isNaN(penaltyValue) || penaltyValue < 0) {
-                alert('올바른 벌금 금액을 입력해주세요.');
-                return;
-            }
-            if (penaltyValue > 100000) {
-                alert('벌금 금액은 100,000원 이하로 설정해주세요.');
-                return;
-            }
-            
-            penalty = penaltyValue;
-            savePenalty();
-            
-            currentHole = 1;
-            winners = {};
-            
-            document.getElementById('gameSetup').classList.add('hidden');
-            document.getElementById('gamePlaying').classList.remove('hidden');
-            renderGamePlaying();
-        }
-
-        // 게임 진행 렌더링
-        function renderGamePlaying() {
-            const activePlayers = players.filter(p => p.isActive);
-            
-            document.getElementById('holeTitle').textContent = `${currentCourse}코스 - ${currentHole}번홀`;
-            
-            const grid = document.getElementById('playersGrid');
-            
-            // 플레이어 버튼들
-            let buttons = activePlayers.map(player => `
-                <button class="player-btn ${winners[currentHole] === player.id ? 'winner' : ''}"
-                        onclick="selectWinner('${player.id}')">
-                    ${winners[currentHole] === player.id ? '🏆 ' : ''}${player.name}
-                </button>
-            `);
-            
-            // 무승부 버튼
-            buttons.push(`
-                <button class="player-btn ${winners[currentHole] === 'draw' ? 'draw' : ''}"
-                        onclick="selectWinner('draw')" 
-                        style="grid-column: span 1;">
-                    ${winners[currentHole] === 'draw' ? '🤝 ' : ''}무승부
-                </button>
-            `);
-            
-            // 모두실패 버튼
-            buttons.push(`
-                <button class="player-btn ${winners[currentHole] === 'allfail' ? 'allfail' : ''}"
-                        onclick="selectWinner('allfail')" 
-                        style="grid-column: span 1;">
-                    ${winners[currentHole] === 'allfail' ? '❌ ' : ''}모두실패
-                </button>
-            `);
-            
-            grid.innerHTML = buttons.join('');
-            
-            // 홀 인디케이터
-            const indicator = document.getElementById('holeIndicator');
-            indicator.innerHTML = Array.from({ length: 9 }, (_, i) => i + 1)
-                .map(hole => {
-                    let className = 'hole-dot ';
-                    if (hole === currentHole) className += 'current';
-                    else if (winners[hole]) className += 'completed';
-                    else className += 'pending';
-                    return `<div class="${className}">${hole}</div>`;
-                }).join('');
-            
-            // 버튼 상태
-            document.getElementById('prevBtn').disabled = currentHole === 1;
-            const nextBtn = document.getElementById('nextBtn');
-            if (currentHole === 9) {
-                nextBtn.textContent = '다음 게임';
-                nextBtn.onclick = finishCurrentGame;
-            } else {
-                nextBtn.textContent = '다음 홀 →';
-                nextBtn.onclick = nextHole;
-            }
-        }
-
-        // 우승자 선택
-        function selectWinner(playerId) {
-            winners[currentHole] = playerId;
-            renderGamePlaying();
-        }
-
-        // 다음 홀
-        function nextHole() {
-            if (!winners[currentHole]) {
-                alert('이 홀의 1등을 선택해주세요.');
-                return;
-            }
-            if (currentHole < 9) {
-                currentHole++;
-                renderGamePlaying();
-            }
-        }
-
-        // 이전 홀
-        function prevHole() {
-            if (currentHole > 1) {
-                currentHole--;
-                renderGamePlaying();
-            }
-        }
-
-        // 결과 보기
-        function showResult() {
-            if (!winners[currentHole]) {
-                alert('이 홀의 1등을 선택해주세요.');
-                return;
-            }
-            
-            document.getElementById('gamePlaying').classList.add('hidden');
-            document.getElementById('gameResult').classList.remove('hidden');
-            renderResult();
-        }
-
-        // 현재 진행 중인 게임의 중간 결과 보기
-        function showCurrentResult() {
-            document.getElementById('gamePlaying').classList.add('hidden');
-            document.getElementById('gameResult').classList.remove('hidden');
-            renderResult();
-        }
-
-        // 현재 게임 종료 및 저장
-        function finishCurrentGame() {
-            if (!winners[currentHole]) {
-                alert('이 홀의 1등을 선택해주세요.');
-                return;
-            }
-            
-            // 게임 자동 저장
-            const activePlayers = players.filter(p => p.isActive);
-            const game = {
-                id: Date.now().toString(),
-                date: new Date().toISOString(),
-                course: currentCourse,
-                holes: 9,
-                penalty,
-                participants: activePlayers.map(p => ({ id: p.id, name: p.name })),
-                winners
-            };
-            
-            const games = JSON.parse(localStorage.getItem(STORAGE_KEYS.GAMES) || '[]');
-            games.push(game);
-            localStorage.setItem(STORAGE_KEYS.GAMES, JSON.stringify(games));
-            
-            alert('✅ 게임이 저장되었습니다!\n다음 게임을 시작하세요.');
-            
-            // 게임 설정 화면으로 돌아가기
-            document.getElementById('gamePlaying').classList.add('hidden');
-            document.getElementById('gameSetup').classList.remove('hidden');
-            renderGameSetup();
-        }
-
-        // 결과 렌더링
-        function renderResult() {
-            const activePlayers = players.filter(p => p.isActive);
-            
-            // 무승부와 모두실패 횟수 계산
-            const drawCount = Object.values(winners).filter(w => w === 'draw').length;
-            const allFailCount = Object.values(winners).filter(w => w === 'allfail').length;
-            
-            const stats = activePlayers.map(player => {
-                const wins = Object.values(winners).filter(id => id === player.id).length;
-                
-                // 벌금횟수 = 전체 홀수 - 1등홀수 - 무승부홀수
-                const penalties = 9 - wins - drawCount;
-                
-                // 벌금금액 = (벌금횟수 + 모두실패) * 벌금
-                const amount = (penalties + allFailCount) * penalty;
-                
-                return {
-                    id: player.id,
-                    name: player.name,
-                    wins,
-                    drawCount,
-                    allFailCount,
-                    penalties,
-                    amount
-                };
-            });
-            
-            const resultDiv = document.getElementById('resultStats');
-            resultDiv.innerHTML = stats.map(stat => `
-                <div class="stats-card">
-                    <div style="font-weight: bold; font-size: 1.125rem; color: #047857; margin-bottom: 0.5rem;">
-                        ${stat.name}
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-item" style="background: #fef3c7;">
-                            <div class="stat-label" style="color: #78350f;">1등</div>
-                            <div class="stat-value" style="color: #92400e;">${stat.wins}회</div>
-                        </div>
-                        <div class="stat-item" style="background: #fee2e2;">
-                            <div class="stat-label" style="color: #7f1d1d;">벌금</div>
-                            <div class="stat-value" style="color: #991b1b;">${stat.penalties}회</div>
-                        </div>
-                        <div class="stat-item" style="background: #d1fae5;">
-                            <div class="stat-label" style="color: #065f46;">금액</div>
-                            <div class="stat-value" style="color: #047857;">${stat.amount.toLocaleString()}원</div>
-                        </div>
-                    </div>
-                    ${stat.drawCount > 0 || stat.allFailCount > 0 ? `
-                        <div style="font-size: 0.75rem; margin-top: 0.5rem; text-align: center; display: flex; gap: 0.5rem; justify-content: center;">
-                            ${stat.drawCount > 0 ? `<span style="color: #3b82f6;">🤝 무승부: ${stat.drawCount}회</span>` : ''}
-                            ${stat.allFailCount > 0 ? `<span style="color: #ef4444;">❌ 모두실패: ${stat.allFailCount}회 (+${stat.allFailCount * penalty}원)</span>` : ''}
-                        </div>
-                    ` : ''}
-                </div>
-            `).join('');
-        }
-
-        // 게임으로 돌아가기
-        function backToGame() {
-            document.getElementById('gameResult').classList.add('hidden');
-            document.getElementById('gamePlaying').classList.remove('hidden');
-        }
-
-        // 게임 저장
-        function saveGame() {
-            const activePlayers = players.filter(p => p.isActive);
-            const game = {
-                id: Date.now().toString(),
-                date: new Date().toISOString(),
-                course: currentCourse,
-                holes: 9,
-                penalty,
-                participants: activePlayers.map(p => ({ id: p.id, name: p.name })),
-                winners
-            };
-            
-            const games = JSON.parse(localStorage.getItem(STORAGE_KEYS.GAMES) || '[]');
-            games.push(game);
-            localStorage.setItem(STORAGE_KEYS.GAMES, JSON.stringify(games));
-            
-            const date = new Date();
-            const dateStr = `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}.`;
-            alert(`✅ 게임이 저장되었습니다!\n날짜: ${dateStr}\n참가자: ${activePlayers.length}명`);
-            showPage('main');
-        }
-
-        // 새 게임
-        function newGame() {
-            showPage('game');
-        }
-
-        // 기록 렌더링 (날짜별 합산)
-        function renderRecords() {
-            const games = JSON.parse(localStorage.getItem(STORAGE_KEYS.GAMES) || '[]');
-            
-            const recordsDiv = document.getElementById('recordsList');
-            
-            if (games.length === 0) {
-                recordsDiv.innerHTML = `
-                    <div style="text-align: center; padding: 3rem 0;">
-                        <p style="color: #6b7280; font-size: 1.125rem;">저장된 게임 기록이 없습니다.</p>
-                        <p style="color: #9ca3af; font-size: 0.875rem; margin-top: 0.5rem;">게임을 플레이하고 저장해보세요!</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // 날짜별로 게임 그룹화
-            const gamesByDate = {};
-            games.forEach(game => {
-                const date = new Date(game.date);
-                const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-                if (!gamesByDate[dateKey]) {
-                    gamesByDate[dateKey] = [];
-                }
-                gamesByDate[dateKey].push(game);
-            });
-            
-            // 날짜별로 정렬 (최신순)
-            const sortedDates = Object.keys(gamesByDate).sort((a, b) => b.localeCompare(a));
-            
-            recordsDiv.innerHTML = sortedDates.map(dateKey => {
-                const dailyGames = gamesByDate[dateKey];
-                const [year, month, day] = dateKey.split('-');
-                const dateStr = `${year}.${parseInt(month)}.${parseInt(day)}.`;
-                
-                // 날짜의 모든 게임에 참가한 플레이어 찾기
-                const allParticipants = {};
-                dailyGames.forEach(game => {
-                    game.participants.forEach(p => {
-                        if (!allParticipants[p.id]) {
-                            allParticipants[p.id] = {
-                                id: p.id,
-                                name: p.name,
-                                wins: 0,
-                                penalties: 0,
-                                amount: 0
-                            };
-                        }
+    function getStats(coursesObj, pVal, selArr) {
+        let stats = {};
+        selArr.forEach(i => stats[i] = { win:0, draw:0, fail:0, pCount:0 });
+        let totalH = 0;
+        Object.keys(coursesObj).forEach(cId => {
+            for(let i=1; i<=9; i++) {
+                const h = coursesObj[cId][i];
+                if(h.winners.length === 0 && !h.draw && !h.fail) continue;
+                totalH++;
+                if(h.draw) selArr.forEach(idx => stats[idx].draw++);
+                else if(h.fail) selArr.forEach(idx => { stats[idx].fail++; stats[idx].pCount++; });
+                else {
+                    selArr.forEach(idx => {
+                        if(h.winners.includes(idx)) stats[idx].win++;
+                        else stats[idx].pCount++;
                     });
-                });
-                
-                // 각 게임의 통계를 합산
-                dailyGames.forEach(game => {
-                    // 게임별 무승부와 모두실패 횟수
-                    const drawCount = Object.values(game.winners).filter(w => w === 'draw').length;
-                    const allFailCount = Object.values(game.winners).filter(w => w === 'allfail').length;
-                    
-                    game.participants.forEach(p => {
-                        const wins = Object.values(game.winners).filter(id => id === p.id).length;
-                        
-                        // 벌금횟수 = 전체 홀수 - 1등홀수 - 무승부홀수
-                        const penalties = game.holes - wins - drawCount;
-                        
-                        // 벌금금액 = (벌금횟수 + 모두실패) * 벌금
-                        const amount = (penalties + allFailCount) * game.penalty;
-                        
-                        if (allParticipants[p.id]) {
-                            allParticipants[p.id].wins += wins;
-                            allParticipants[p.id].penalties += penalties;
-                            allParticipants[p.id].amount += amount;
-                        }
-                    });
-                });
-                
-                const stats = Object.values(allParticipants);
-                const totalGames = dailyGames.length;
-                const totalHoles = dailyGames.reduce((sum, game) => sum + game.holes, 0);
-                const participantCount = stats.length;
-                
-                // 해당 날짜의 모든 게임 ID 배열
-                const gameIds = dailyGames.map(g => g.id).join(',');
-                
-                return `
-                    <div class="record-card">
-                        <div class="record-header">
-                            <div>
-                                <div style="font-size: 1.125rem; font-weight: bold;">[${dateStr}]</div>
-                                <div style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.25rem;">
-                                    총 게임: ${totalGames}회 | 총 홀: ${totalHoles}홀 | 참가: ${participantCount}명
-                                </div>
-                            </div>
-                            <button class="btn-danger" onclick="deleteDailyGames('${gameIds}', '${dateStr}')">🗑️ 삭제</button>
-                        </div>
-                        <div class="record-body">
-                            ${stats.map(stat => `
-                                <div class="record-player">
-                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">${stat.name}</div>
-                                    <div style="display: flex; gap: 1rem; font-size: 0.875rem;">
-                                        <span style="color: #78350f;">🏆 1등: <strong>${stat.wins}회</strong></span>
-                                        <span style="color: #991b1b;">💸 벌금: <strong>${stat.penalties}회</strong></span>
-                                        <span style="color: #047857;">💰 금액: <strong>${stat.amount.toLocaleString()}원</strong></span>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // 날짜별 게임 일괄 삭제
-        function deleteDailyGames(gameIdsStr, dateStr) {
-            if (!confirm(`[${dateStr}]의 모든 게임 기록을 삭제하시겠습니까?`)) return;
-            
-            const gameIds = gameIdsStr.split(',');
-            let games = JSON.parse(localStorage.getItem(STORAGE_KEYS.GAMES) || '[]');
-            games = games.filter(g => !gameIds.includes(g.id));
-            localStorage.setItem(STORAGE_KEYS.GAMES, JSON.stringify(games));
-            renderRecords();
-        }
-
-        // 앱 종료
-        function exitApp() {
-            if (confirm('앱을 종료하시겠습니까?')) {
-                window.close();
+                }
             }
-        }
+        });
+        return { stats, totalH };
+    }
 
-        // 데이터 내보내기
-        function exportData() {
-            const data = {
-                players: localStorage.getItem(STORAGE_KEYS.PLAYERS),
-                games: localStorage.getItem(STORAGE_KEYS.GAMES),
-                penalty: localStorage.getItem(STORAGE_KEYS.PENALTY),
-                exportDate: new Date().toISOString()
-            };
-            
-            const dataStr = JSON.stringify(data, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `parkgolf_backup_${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-            URL.revokeObjectURL(url);
-            
-            alert('데이터가 내보내기되었습니다!');
-        }
+    function renderResultItem(idx, s, pBase) {
+        return `
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:15px; margin-bottom:10px;">
+                <div style="flex:1;">
+                    <span style="font-size:18px; font-weight:bold; color:#333;">${state.players[idx]}</span>
+                    <div class="badge-group">
+                        <span class="g-badge g-win">🏆 1등 ${s.win}</span>
+                        <span class="g-badge g-draw">🤝 무승부 ${s.draw}</span>
+                        <span class="g-badge g-fail">💀 실패 ${s.fail}</span>
+                    </div>
+                </div>
+                <div class="penalty-highlight">
+                    <span class="penalty-label">벌금홀수</span>
+                    <span class="penalty-val">${s.pCount}회</span>
+                    <span style="font-size:14px; font-weight:bold; margin-top:2px; display:block;">${(s.pCount * pBase).toLocaleString()}원</span>
+                </div>
+            </div>`;
+    }
 
-        // 데이터 가져오기
-        function importData() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const data = JSON.parse(event.target.result);
-                        
-                        if (!confirm('기존 데이터를 덮어쓰시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-                            return;
-                        }
-                        
-                        if (data.players) localStorage.setItem(STORAGE_KEYS.PLAYERS, data.players);
-                        if (data.games) localStorage.setItem(STORAGE_KEYS.GAMES, data.games);
-                        if (data.penalty) localStorage.setItem(STORAGE_KEYS.PENALTY, data.penalty);
-                        
-                        alert('데이터를 성공적으로 가져왔습니다!');
-                        location.reload();
-                    } catch (error) {
-                        alert('데이터 가져오기에 실패했습니다. 올바른 백업 파일인지 확인해주세요.');
-                    }
-                };
-                reader.readAsText(file);
-            };
-            input.click();
-        }
+    function showResult() {
+        const obj = {}; obj[state.currentCourse] = state.courseData[state.currentCourse];
+        const { stats, totalH } = getStats(obj, state.penalty, state.selectedIdx);
+        const container = document.getElementById('result-list');
+        container.innerHTML = `<div style="text-align:center; font-weight:bold; color:var(--primary); margin-bottom:15px;">${state.currentCourse}코스 중간집계 (${totalH}홀)</div>`;
+        state.selectedIdx.forEach(idx => { container.innerHTML += renderResultItem(idx, stats[idx], state.penalty); });
+        showScreen('result');
+    }
 
-        // 앱 초기화
-        init();
-    </script>
+    function saveCurrentGame(alertUser) {
+        const today = new Date().toLocaleDateString();
+        let history = JSON.parse(localStorage.getItem('parkGolf_history_v5')) || [];
+        let dayRec = history.find(h => h.date === today);
+        if(!dayRec) {
+            dayRec = { date: today, courses: {}, penalty: state.penalty, players: [...state.players], selected: [...state.selectedIdx] };
+            history.push(dayRec);
+        }
+        dayRec.courses[state.currentCourse] = JSON.parse(JSON.stringify(state.courseData[state.currentCourse]));
+        localStorage.setItem('parkGolf_history_v5', JSON.stringify(history));
+        saveToLocal();
+        if(alertUser) alert("저장되었습니다.");
+    }
+
+    function nextCourseAction() {
+        saveCurrentGame(false); // 저장 확인창(alert) 없이 저장만 수행
+        showScreen('game-setup');
+    }
+
+    function renderHistory() {
+        const history = JSON.parse(localStorage.getItem('parkGolf_history_v5')) || [];
+        const container = document.getElementById('history-container');
+        container.innerHTML = '';
+        history.forEach((day, dIdx) => {
+            const { stats, totalH } = getStats(day.courses, day.penalty, day.selected);
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style = "border-left: 8px solid var(--primary); padding:15px;";
+            card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <strong style="font-size:18px;">📅 ${day.date}</strong>
+                <button onclick="deleteHistory(${dIdx})" style="color:var(--danger); border:none; background:none; font-weight:bold;">기록삭제</button>
+            </div>
+            <div style="font-size:12px; color:#777; margin-bottom:10px;">총 ${Object.keys(day.courses).length}코스 플레이 (${totalH}홀)</div>`;
+            day.selected.forEach(idx => { card.innerHTML += renderResultItem(idx, stats[idx], day.penalty); });
+            container.appendChild(card);
+        });
+    }
+
+    function deleteHistory(idx) {
+        if(confirm("이 기록을 삭제할까요?")) {
+            let history = JSON.parse(localStorage.getItem('parkGolf_history_v5'));
+            history.splice(idx, 1);
+            localStorage.setItem('parkGolf_history_v5', JSON.stringify(history));
+            renderHistory();
+        }
+    }
+
+    function exitApp() {
+        saveToLocal();
+        if(confirm("데이터를 저장하고 종료하시겠습니까?")) window.location.href = "about:blank";
+    }
+
+    init();
+</script>
 </body>
 </html>
