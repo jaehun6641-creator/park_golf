@@ -88,13 +88,13 @@
         <p class="intro-msg">최고의 라운딩 파트너<br><strong>벌금 매니지먼트 시스템</strong></p>
         <button class="btn-start" onclick="closeIntro()">프로그램 시작</button>
     </div>
-    <div class="intro-footer">Version 6.1 Eagle Pro Edition<br>Created by <strong>오재훈</strong><br>(Contact to jaehun6641@gmail.com)</div>
+    <div class="intro-footer">Version 6.1 Eagle Pro Edition<br>Created by <strong>오재훈</strong><br>(jaehun6641@gmail.com)</div>
 </div>
 
 <div id="app" class="hidden">
     <header>
         <nav>
-            <button onclick="showScreen('player')" id="nav-player">플레이어</button>
+            <button onclick="showScreen('player')" id="nav-player">선수등록</button>
             <button onclick="showScreen('game-setup')" id="nav-game">코스선택</button>
             <button onclick="showScreen('records')" id="nav-records">기록보기</button>
             <button onclick="exitApp()">종료</button>
@@ -103,7 +103,7 @@
 
     <div class="container">
         <section id="screen-player" class="screen">
-            <h3 style="margin: 5px 0 15px;">멤버 등록</h3>
+            <h3 style="margin: 5px 0 15px;">선수 등록</h3>
             <div id="player-inputs"></div>
         </section>
 
@@ -131,9 +131,9 @@
             </div>
             <div class="btn-row">
                 <button onclick="showResult()" class="btn-big" style="background:#546e7a; color:white;">📊 코스결과</button>
-                <button onclick="saveCurrentGame(true)" class="btn-big" style="background:var(--accent); color:white;">💾 현재저장</button>
+                <button onclick="saveCurrentGame(true)" class="btn-big" style="background:var(--accent); color:white;">💾 게임저장</button>
             </div>
-            <button onclick="showScreen('game-setup')" class="btn-big" style="width:100%; margin-top:10px; background:#455a64; color:white;">⛳ 코스 완료 후 목록으로</button>
+            <button onclick="showScreen('game-setup')" class="btn-big" style="width:100%; margin-top:10px; background:#455a64; color:white;">⛳ 코스 완료 후 다음 코스 선택</button>
         </section>
 
         <section id="screen-result" class="screen hidden">
