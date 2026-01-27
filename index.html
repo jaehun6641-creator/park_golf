@@ -65,7 +65,7 @@
         .g-draw { background: #eceff1; color: var(--draw-color); border: 1px solid #cfd8dc; }
         .g-fail { background: #efebe9; color: var(--fail-color); border: 1px solid #d7ccc8; }
         .penalty-highlight { background: #fff5f5; border: 2.5px solid var(--danger); color: var(--danger); padding: 10px; border-radius: 15px; text-align: center; min-width: 90px; }
-        .penalty-val { font-size: 15px; font-weight: 900; display: block; } /* 폰트사이즈 조정 */
+        .penalty-val { font-size: 14px; font-weight: 900; display: block; }
         .hidden { display: none !important; }
         #exit-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; text-align: center; }
     </style>
@@ -79,7 +79,7 @@
         <p class="intro-msg">반갑습니다!<br><strong>최고의 라운딩 파트너</strong></p>
         <button class="btn-start" onclick="startApp()">프로그램 시작</button>
     </div>
-    <div class="intro-footer">Version 6.3 Final | Created by <strong>오재훈</strong></div>
+    <div class="intro-footer">Version 1.0 Final | Created by <strong>오재훈</strong></div>
 </div>
 
 <div id="app-main" class="hidden">
@@ -234,9 +234,13 @@
     function changeHole(dir) { let next = state.currentHole + dir; if(next >= 1 && next <= 9) { state.currentHole = next; updatePlayUI(); } }
 
     function getSummary(cData, penalty, selPlayers) {
-        let stats = {}; selPlayers.forEach(i => stats[i] = { win:0, draw:0, fail:0, pCount:0 }); if(!cData) return stats;
+        let stats = { playedHoles: 0 }; 
+        selPlayers.forEach(i => stats[i] = { win:0, draw:0, fail:0, pCount:0 }); 
+        if(!cData) return stats;
+        
         Object.values(cData).forEach(hole => {
             if(!hole || (hole.winners.length === 0 && !hole.draw && !hole.fail)) return;
+            stats.playedHoles++; // 실제 게임한 홀수 카운트
             if(hole.draw) selPlayers.forEach(idx => stats[idx].draw++);
             else if(hole.fail) selPlayers.forEach(idx => { stats[idx].fail++; stats[idx].pCount++; });
             else { selPlayers.forEach(idx => { if(hole.winners.includes(idx)) stats[idx].win++; else stats[idx].pCount++; }); }
@@ -246,12 +250,9 @@
 
     function showResult() {
         const stats = getSummary(state.courseData[state.currentCourse], state.penalty, state.selectedIdx);
-        let totalP = 0;
-        state.selectedIdx.forEach(idx => { totalP += stats[idx].pCount; });
-
         const container = document.getElementById('result-list'); 
-        // [수정] 제목에 (총 ?회) 추가
-        container.innerHTML = `<h3>${state.currentCourse}코스 정산 결과 (총 ${totalP}회)</h3>`;
+        // [수정] (총 ?회)가 게임한 홀수를 나타내도록 변경
+        container.innerHTML = `<h3>${state.currentCourse}코스 정산 결과 (총 ${stats.playedHoles}회)</h3>`;
         
         state.selectedIdx.forEach(idx => { 
             const s = stats[idx]; 
@@ -293,16 +294,12 @@
             let combinedData = []; Object.values(day.courses).forEach(c => { combinedData = combinedData.concat(c); });
             const stats = getSummary(combinedData, day.penalty, day.selected);
             
-            let dayTotalP = 0;
-            day.selected.forEach(idx => { dayTotalP += stats[idx].pCount; });
-
             const div = document.createElement('div'); div.className = 'card'; div.style = "border-left: 8px solid var(--primary);";
-            // [수정] 날짜 뒤에 (총 ?회) 추가
-            div.innerHTML = `<div style="display:flex; justify-content:space-between;"><strong>📅 ${day.date} (총 ${dayTotalP}회)</strong><button onclick="deleteHistory(${dIdx})" style="color:var(--danger); border:none; background:none; font-weight:bold;">삭제</button></div>`;
+            // [수정] 날짜 뒤 (총 ?회)가 그날 전체 게임한 홀수를 나타내도록 변경
+            div.innerHTML = `<div style="display:flex; justify-content:space-between;"><strong>📅 ${day.date} (총 ${stats.playedHoles}회)</strong><button onclick="deleteHistory(${dIdx})" style="color:var(--danger); border:none; background:none; font-weight:bold;">삭제</button></div>`;
             
             day.selected.forEach(idx => { 
                 const s = stats[idx]; 
-                // [수정] "벌금 ?회 000원" 형식으로 변경
                 div.innerHTML += `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid #eee;">
                     <div>${day.players[idx]}<br><small>🏆${s.win} 🤝${s.draw} 💀${s.fail}</small></div>
