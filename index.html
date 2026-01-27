@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>파크골프 프로 v5.5</title>
+    <title>파크골프 프로 v5.5 (Sound & Vibe)</title>
     <style>
         /* --- [추가] 소개 화면 스타일 --- */
         #intro-screen {
@@ -79,7 +79,7 @@
         <p class="intro-msg">반갑습니다!<br><strong>최고의 라운딩 파트너</strong></p>
         <button class="btn-start" onclick="startApp()">프로그램 시작</button>
     </div>
-    <div class="intro-footer">Version 6.0 Eagle Pro | Created by <strong>오재훈</strong></div>
+    <div class="intro-footer">Version 6.1 Eagle Pro | Created by <strong>오재훈</strong></div>
 </div>
 
 <div id="app-main" class="hidden">
@@ -118,27 +118,46 @@
 </div>
 
 <script>
-    /* --- 확인음 재생 로직 --- */
-    function playClickSound() {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    /* --- 확인 피드백 (소리 및 진동) 로직 --- */
+    let audioCtx = null;
+
+    function playFeedback() {
+        // 1. 소리 재생 (리소스 과부하 방지 로직)
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
         const oscillator = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
-        oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+        
         gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-        oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
-        oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.1);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.1);
+
+        // 2. 진동 발생 (50ms 짧게)
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
     }
 
-    function attachSound() {
+    function attachFeedback() {
         document.querySelectorAll('button, .hole-dot').forEach(el => {
-            if(!el.dataset.sound) { el.addEventListener('click', playClickSound); el.dataset.sound = "true"; }
+            if(!el.dataset.fb) { 
+                el.addEventListener('click', playFeedback); 
+                el.dataset.fb = "true"; 
+            }
         });
     }
 
     /* --- 소개 화면 제어 --- */
     function startApp() {
-        playClickSound();
+        playFeedback();
         document.getElementById('intro-screen').style.opacity = '0';
         setTimeout(() => {
             document.getElementById('intro-screen').classList.add('hidden');
@@ -171,7 +190,8 @@
         if(navBtn) navBtn.classList.add('active');
         if(id === 'game-setup') renderCourseBtns();
         if(id === 'records') renderHistory();
-        window.scrollTo(0,0); attachSound();
+        window.scrollTo(0,0); 
+        attachFeedback(); // 화면 바뀔 때 피드백 연결
     }
 
     function renderPlayerSetup() {
@@ -181,7 +201,7 @@
             div.innerHTML = `<input type="text" value="${name}" onchange="state.players[${i}]=this.value; saveState();" placeholder="이름 입력" style="flex:1; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:16px;"><input type="checkbox" style="width:25px; height:25px;" ${state.selectedIdx.includes(i) ? 'checked' : ''} onchange="togglePlayer(${i})">`;
             container.appendChild(div);
         });
-        attachSound();
+        attachFeedback();
     }
 
     function togglePlayer(i) { if(state.selectedIdx.includes(i)) state.selectedIdx = state.selectedIdx.filter(idx => idx !== i); else state.selectedIdx.push(i); saveState(); }
@@ -194,7 +214,7 @@
             btn.className = `course-btn ${status}`; btn.innerHTML = `${i}코스<br><small>${status==='status-all'?'완료':(status==='status-part'?'진행중':'미진행')}</small>`;
             btn.onclick = () => startCourse(i); container.appendChild(btn);
         }
-        attachSound();
+        attachFeedback();
     }
 
     function startCourse(cIdx) {
@@ -219,7 +239,7 @@
         });
         document.getElementById('spec-draw').className = `p-btn ${data.draw ? 'selected' : ''}`;
         document.getElementById('spec-fail').className = `p-btn ${data.fail ? 'selected' : ''}`;
-        saveState(); attachSound();
+        saveState(); attachFeedback();
     }
 
     function toggleWinner(idx) {
@@ -249,7 +269,7 @@
         const stats = getSummary(state.courseData[state.currentCourse], state.penalty, state.selectedIdx);
         const container = document.getElementById('result-list'); container.innerHTML = `<h3>${state.currentCourse}코스 정산 결과</h3>`;
         state.selectedIdx.forEach(idx => { const s = stats[idx]; container.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;"><div><div style="font-weight:bold; font-size:18px;">${state.players[idx]}</div><div class="badge-group"><span class="g-badge g-win">🏆 ${s.win}</span><span class="g-badge g-draw">🤝 ${s.draw}</span><span class="g-badge g-fail">💀 ${s.fail}</span></div></div><div class="penalty-highlight"><small>벌금홀수</small><span class="penalty-val">${s.pCount}회</span><strong>${(s.pCount * state.penalty).toLocaleString()}원</strong></div></div>`; });
-        showScreen('result'); attachSound();
+        showScreen('result'); attachFeedback();
     }
 
     function saveCurrentGame(isManual) {
@@ -275,7 +295,7 @@
             day.selected.forEach(idx => { const s = stats[idx]; div.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid #eee;"><div>${day.players[idx]}<br><small>🏆${s.win} 🤝${s.draw} 💀${s.fail}</small></div><div class="penalty-highlight" style="min-width:70px; padding:5px;"><span style="font-size:16px; font-weight:900;">${(s.pCount * day.penalty).toLocaleString()}원</span></div></div>`; });
             container.appendChild(div);
         });
-        attachSound();
+        attachFeedback();
     }
 
     function deleteHistory(idx) { if(confirm("삭제할까요?")) { let history = JSON.parse(localStorage.getItem('parkGolf_history_v5_5')); history.splice(idx, 1); localStorage.setItem('parkGolf_history_v5_5', JSON.stringify(history)); renderHistory(); } }
