@@ -167,6 +167,9 @@
 <script>
     /* --- [추가] 소개 화면 제어 --- */
     function startApp() {
+        // 브라우저 보안 정책상 사용자 첫 클릭 시 오디오 권한이 생깁니다.
+        playClickSound();
+        
         document.getElementById('intro-screen').style.opacity = '0';
         setTimeout(() => {
             document.getElementById('intro-screen').classList.add('hidden');
@@ -174,6 +177,35 @@
             init(); // 원본 초기화 함수 호출
         }, 600);
     }
+
+// 클릭 소리를 생성하고 재생하는 함수
+function playClickSound() {
+    // 오디오 컨텍스트 생성 (브라우저 표준)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.type = 'sine'; // 부드러운 소리
+    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // 주파수(음높이)
+    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); // 볼륨
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.1); // 0.1초 동안 짧게 재생
+}
+
+// 페이지의 모든 버튼 클릭 시 소리가 나도록 일괄 등록하는 함수
+function attachSoundToButtons() {
+    document.querySelectorAll('button').forEach(btn => {
+        // 기존 onclick 기능을 유지하면서 소리만 추가
+        btn.addEventListener('click', playClickSound);
+    });
+}
+
+    
 
     /* --- [원본 유지] 파크골프 v5.5 로직 시작 --- */
     let state = {
@@ -228,6 +260,7 @@
             `;
             container.appendChild(div);
         });
+        attachSoundToButtons();
     }
 
     function togglePlayer(i) {
@@ -253,6 +286,7 @@
             btn.onclick = () => startCourse(i);
             container.appendChild(btn);
         }
+        attachSoundToButtons();
     }
 
     function startCourse(cIdx) {
@@ -291,6 +325,7 @@
         document.getElementById('spec-draw').className = `p-btn ${data.draw ? 'selected' : ''}`;
         document.getElementById('spec-fail').className = `p-btn ${data.fail ? 'selected' : ''}`;
         saveState();
+        attachSoundToButtons();
     }
 
     function toggleWinner(idx) {
@@ -355,6 +390,7 @@
                 </div>`;
         });
         showScreen('result');
+        attachSoundToButtons();
     }
 
     function saveCurrentGame(isManual) {
@@ -395,6 +431,7 @@
             });
             container.appendChild(div);
         });
+        attachSoundToButtons();
     }
 
     function deleteHistory(idx) {
