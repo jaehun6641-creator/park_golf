@@ -3,86 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>파크골프 프로 v5</title>
+    <title>독수리 파크골프 v5.7</title>
     <style>
         :root {
-            --primary: #2e7d32;
+            --primary: #1b5e20;
+            --gold: #d4af37;
+            --gold-light: #f9e29d;
             --bg: #f4f7f6;
             --played-all: #ffd600; 
-            --played-part: #f8bbd0;
-            --not-played: #ffffff;
-            --danger: #d32f2f;
             --accent: #1976d2;
-            --win-color: #fb8c00;
-            --draw-color: #78909c;
-            --fail-color: #8d6e63;
         }
 
-        body { font-family: 'Pretendard', sans-serif; margin: 0; background: var(--bg); color: #212121; -webkit-tap-highlight-color: transparent; }
-        header { background: var(--primary); color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-        nav { display: flex; justify-content: space-around; }
-        nav button { background: none; border: none; color: rgba(255,255,255,0.7); padding: 15px; font-weight: bold; font-size: 16px; }
-        nav button.active { color: white; border-bottom: 4px solid var(--played-all); }
+        body { font-family: 'Pretendard', -apple-system, sans-serif; margin: 0; background: var(--bg); color: #212121; -webkit-tap-highlight-color: transparent; }
 
+        /* --- 소개 화면 스타일 --- */
+        #intro-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(160deg, #1b5e20 0%, #0a3d12 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 11000; text-align: center; color: white; transition: opacity 0.8s ease;
+        }
+        
+        .intro-visual {
+            font-size: 100px; margin-bottom: 20px; 
+            filter: drop-shadow(0 0 15px rgba(212,175,55,0.5));
+            animation: float 3s infinite ease-in-out;
+        }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+
+        .intro-title { 
+            font-size: 45px; font-weight: 900; letter-spacing: -1px; margin-bottom: 15px;
+            background: linear-gradient(to bottom, #ffffff, #d4af37);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .intro-msg { 
+            font-size: 22px; font-weight: 300; margin-bottom: 60px; line-height: 1.6;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* [강조] 시작 버튼 스타일 */
+        .btn-start { 
+            padding: 24px 80px; border-radius: 80px; border: none;
+            /* 황금빛 그라데이션 배경 */
+            background: linear-gradient(45deg, #d4af37, #f9e29d, #d4af37);
+            background-size: 200% auto;
+            color: #1b5e20; /* 진한 초록색 글자 */
+            font-size: 26px; font-weight: 900; 
+            cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4), 0 0 15px rgba(212,175,55,0.4);
+            animation: pulse 2s infinite, shine 3s infinite linear;
+        }
+
+        /* 버튼이 커졌다 작아지는 효과 */
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 15px 35px rgba(212,175,55,0.6); }
+            100% { transform: scale(1); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        }
+
+        /* 광택이 흐르는 효과 */
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        .btn-start:active { transform: scale(0.95); }
+
+        .intro-footer {
+            position: absolute; bottom: 40px; width: 100%;
+            font-size: 14px; opacity: 0.8;
+        }
+        .intro-footer strong { color: var(--gold); }
+
+        /* --- 기존 레이아웃 및 숨김 처리 --- */
+        .hidden { display: none !important; }
+        header { background: var(--primary); color: white; position: sticky; top: 0; z-index: 1000; }
+        nav { display: flex; justify-content: space-around; }
+        nav button { background: none; border: none; color: rgba(255,255,255,0.7); padding: 15px; font-weight: bold; font-size: 16px; flex: 1; }
+        nav button.active { color: white; border-bottom: 4px solid var(--gold); }
         .container { padding: 15px; max-width: 480px; margin: 0 auto; }
         .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
-
-        /* 코스 버튼 상태 */
+        
+        /* (코스/홀 버튼 등 기존 스타일 동일 유지) */
         .course-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .course-btn { padding: 20px 5px; border: 1px solid #ddd; border-radius: 15px; font-weight: bold; font-size: 15px; transition: 0.2s; }
-        .course-btn.status-all { background: var(--played-all); border-color: #fbc02d; }
-        .course-btn.status-part { background: var(--played-part); border-color: #f06292; }
-        .course-btn.status-none { background: var(--not-played); }
-
-        /* 홀 인디케이터 */
+        .course-btn { padding: 15px 5px; border: 1.5px solid #ddd; border-radius: 15px; font-weight: bold; height: 75px; cursor: pointer; }
+        .course-btn.status-all { background: #ffd600; }
+        .course-btn.status-part { background: #f8bbd0; }
         .hole-indicator { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-bottom: 15px; }
         .hole-dot { aspect-ratio: 1/1; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; background: #eee; border: 1.5px solid #ddd; }
-        .hole-dot.active { border-color: var(--primary); background: white; color: var(--primary); box-shadow: 0 0 8px rgba(46,125,50,0.3); }
-        .hole-dot.played { background: var(--played-all); border-color: #fbc02d; }
-
-        /* 버튼 */
+        .hole-dot.active { border-color: var(--primary); background: white; color: var(--primary); }
+        .hole-dot.played { background: #ffd600; }
         .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         .btn-big { height: 55px; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .btn-nav { background: #e8f5e9; color: var(--primary); border: 1px solid #c8e6c9; }
-        .btn-result { background: #546e7a; color: white; }
+        .btn-nav { background: #e8f5e9; color: var(--primary); }
         .btn-save { background: var(--accent); color: white; }
-        .btn-next-course { background: #455a64; color: white; width: 100%; margin-top: 10px; height: 60px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-
-        /* 플레이어 버튼 */
-        .player-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .p-btn { padding: 12px; border: 1.5px solid #eee; background: #fafafa; border-radius: 15px; font-size: 15px; font-weight: 600; }
-        .p-btn.selected { background: var(--played-all); border-color: #fbc02d; font-weight: 800; transform: scale(1.02); }
-
-        /* 기록 그래픽 배지 */
-        .badge-group { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
-        .g-badge { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 4px; }
-        .g-win { background: #fff3e0; color: var(--win-color); border: 1px solid #ffe0b2; }
-        .g-draw { background: #eceff1; color: var(--draw-color); border: 1px solid #cfd8dc; }
-        .g-fail { background: #efebe9; color: var(--fail-color); border: 1px solid #d7ccc8; }
-        
-        .penalty-highlight { 
-            background: #fff5f5; border: 2.5px solid var(--danger); color: var(--danger);
-            padding: 10px; border-radius: 15px; text-align: center; min-width: 90px;
-        }
-        .penalty-val { font-size: 20px; font-weight: 900; display: block; }
-        .penalty-label { font-size: 11px; font-weight: bold; }
-
-        .hidden { display: none; }
+        .player-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .p-btn { padding: 12px; border: 1.5px solid #eee; background: #fafafa; border-radius: 15px; }
+        .p-btn.selected { background: #ffd600; font-weight: 800; }
+        #exit-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="app">
-    <header>
+<div id="intro-screen">
+    <div class="intro-visual">🦅</div>
+    <div class="intro-title">독수리 파크골프</div>
+    <div class="intro-msg">
+        반갑습니다!<br>
+        <strong>최고의 라운딩 파트너</strong>
+    </div>
+    
+    <button class="btn-start" onclick="closeIntro()">프로그램 시작</button>
+
+    <div class="intro-footer">
+        Version 5.7 Eagle Pro<br>
+        Copyright © 2024. All Rights Reserved. Created by <strong>오재훈</strong>
+    </div>
+</div>
+
+<div id="app" class="hidden">
+    <header id="app-header">
         <nav>
             <button onclick="showScreen('player')" id="nav-player">플레이어</button>
-            <button onclick="showScreen('game-setup')" id="nav-game">게임</button>
+            <button onclick="showScreen('game-setup')" id="nav-game">코스선택</button>
             <button onclick="showScreen('records')" id="nav-records">기록</button>
             <button onclick="exitApp()">종료</button>
         </nav>
     </header>
 
-    <div class="container">
+    <div class="container" id="app-body">
         <section id="screen-player" class="screen">
             <h3 style="margin: 0 0 15px 5px;">플레이어 등록</h3>
             <div id="player-inputs"></div>
@@ -90,50 +139,51 @@
 
         <section id="screen-game-setup" class="screen hidden">
             <div class="card">
-                <label style="font-weight: bold;">홀당 벌금액 설정</label>
+                <label style="font-weight: bold;">홀당 벌금액</label>
                 <div style="margin-top:10px; display: flex; align-items: center; gap: 10px;">
-                    <input type="number" id="penalty-input" value="500" style="flex:1; padding:12px; border:2px solid var(--primary); border-radius:10px; font-size:18px; font-weight:bold; text-align: right;">
-                    <span style="font-weight:bold;">원</span>
+                    <input type="number" id="penalty-input" style="flex:1; padding:12px; border:2px solid var(--primary); border-radius:10px; font-size:20px; font-weight:bold; text-align: right;">
+                    <span style="font-size: 18px; font-weight:bold;">원</span>
                 </div>
             </div>
-            <h4 style="margin: 20px 0 10px 5px;">코스 선택 <span style="font-weight:normal; font-size:12px; color:#999;">(완료:노랑, 진행중:분홍)</span></h4>
             <div class="course-grid" id="course-btns"></div>
         </section>
 
         <section id="screen-game-play" class="screen hidden">
             <div class="hole-indicator" id="hole-indicator"></div>
-            <h2 id="display-hole-title" style="margin:0 0 15px 0; font-size: 24px; color: var(--primary);">1코스 - 1홀</h2>
-
+            <h2 id="display-hole-title" style="margin-top:0; color: var(--primary);">1코스 - 1홀</h2>
             <div class="btn-row">
                 <button onclick="changeHole(-1)" class="btn-big btn-nav">◀ 이전홀</button>
                 <button onclick="changeHole(1)" class="btn-big btn-nav">다음홀 ▶</button>
             </div>
-
-            <div class="card" style="padding: 15px;">
+            <div class="card">
                 <div id="play-player-btns" class="player-grid"></div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; padding-top: 15px; border-top: 1px dashed #ddd;">
-                    <button class="p-btn" style="background:#f5f5f5" id="spec-draw" onclick="toggleSpecial('draw')">무승부</button>
-                    <button class="p-btn" style="background:#f5f5f5" id="spec-fail" onclick="toggleSpecial('fail')">모두실패</button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 15px; border-top: 1px dashed #ddd; margin-top:15px;">
+                    <button class="p-btn" id="spec-draw" onclick="toggleSpecial('draw')">🤝 무승부</button>
+                    <button class="p-btn" id="spec-fail" onclick="toggleSpecial('fail')">💀 모두실패</button>
                 </div>
             </div>
-
             <div class="btn-row">
-                <button onclick="showResult()" class="btn-big btn-result">📊 결과보기</button>
-                <button onclick="saveCurrentGame(true)" class="btn-big btn-save">💾 게임저장</button>
+                <button onclick="showResult()" class="btn-big" style="background:#546e7a; color:white;">📊 코스결과</button>
+                <button onclick="saveCurrentGame(true)" class="btn-big btn-save">💾 현재저장</button>
             </div>
-            <button onclick="nextCourseAction()" class="btn-big btn-next-course">⛳ 다음코스 선택</button>
+            <button onclick="nextCourseAction()" class="btn-big" style="background:#455a64; color:white; width: 100%; margin-top: 10px; height: 60px;">⛳ 코스 완료 후 목록으로</button>
         </section>
 
         <section id="screen-result" class="screen hidden">
-            <h3 style="margin-left:5px;">코스별 성적표</h3>
             <div id="result-list"></div>
-            <button onclick="showScreen('game-play')" class="btn-big btn-save" style="width:100%; margin-top:10px;">게임 화면으로 돌아가기</button>
+            <button onclick="showScreen('game-play')" class="btn-big btn-save" style="width:100%; margin-top:10px;">게임 화면으로</button>
         </section>
 
         <section id="screen-records" class="screen hidden">
-            <h3 style="margin-left:5px;">누적 벌금 리포트</h3>
             <div id="history-container"></div>
         </section>
+    </div>
+
+    <div id="exit-overlay" class="hidden">
+        <h1 style="font-size: 60px;">⛳</h1>
+        <h2>데이터 저장 완료</h2>
+        <p>프로그램을 종료합니다.<br>브라우저 탭을 닫아주세요.</p>
+        <button onclick="location.reload()" style="margin-top:40px; padding:15px 35px; border-radius:15px; border:none; font-weight:bold; background:white; color:var(--primary);">다시 시작하기</button>
     </div>
 </div>
 
@@ -144,23 +194,31 @@
         penalty: 500,
         currentCourse: 1,
         currentHole: 1,
-        courseData: {} 
+        courseData: {}
     };
 
+    function closeIntro() {
+        const intro = document.getElementById('intro-screen');
+        intro.style.opacity = '0';
+        setTimeout(() => {
+            intro.classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            init();
+        }, 800);
+    }
+
     function init() {
-        const saved = localStorage.getItem('parkGolf_v5');
-        if(saved) {
-            state = JSON.parse(saved);
-            document.getElementById('penalty-input').value = state.penalty;
-        }
+        document.getElementById('exit-overlay').classList.add('hidden');
+        const saved = localStorage.getItem('parkGolf_v5_7');
+        if(saved) state = Object.assign(state, JSON.parse(saved));
+        document.getElementById('penalty-input').value = state.penalty || 500;
         renderPlayerSetup();
-        renderCourseBtns();
         showScreen('player');
     }
 
-    function saveToLocal() {
+    function saveState() {
         state.penalty = parseInt(document.getElementById('penalty-input').value) || 500;
-        localStorage.setItem('parkGolf_v5', JSON.stringify(state));
+        localStorage.setItem('parkGolf_v5_7', JSON.stringify(state));
     }
 
     function showScreen(id) {
@@ -181,8 +239,8 @@
             div.className = 'card';
             div.style = "display:flex; gap:15px; align-items:center; padding:15px; margin-bottom:10px;";
             div.innerHTML = `
-                <input type="text" value="${name}" onchange="state.players[${i}]=this.value; saveToLocal();" placeholder="이름" style="flex:1; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:16px;">
-                <input type="checkbox" style="width:25px; height:25px;" ${state.selectedIdx.includes(i) ? 'checked' : ''} onchange="togglePlayer(${i})">
+                <input type="text" value="${name}" onchange="state.players[${i}]=this.value; saveState();" style="flex:1; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:18px;">
+                <input type="checkbox" style="width:28px; height:28px;" ${state.selectedIdx.includes(i) ? 'checked' : ''} onchange="togglePlayer(${i})">
             `;
             container.appendChild(div);
         });
@@ -191,7 +249,7 @@
     function togglePlayer(i) {
         if(state.selectedIdx.includes(i)) state.selectedIdx = state.selectedIdx.filter(idx => idx !== i);
         else state.selectedIdx.push(i);
-        saveToLocal();
+        saveState();
     }
 
     function renderCourseBtns() {
@@ -200,14 +258,14 @@
         for(let i=1; i<=12; i++) {
             const btn = document.createElement('button');
             const data = state.courseData[i];
-            let statusClass = 'status-none';
+            let status = 'status-none';
             if(data) {
-                const playedHoles = data.filter(h => h.winners.length > 0 || h.draw || h.fail).length;
-                if(playedHoles === 9) statusClass = 'status-all';
-                else if(playedHoles > 0) statusClass = 'status-part';
+                const playedCount = data.filter(h => h && (h.winners?.length > 0 || h.draw || h.fail)).length;
+                if(playedCount >= 9) status = 'status-all';
+                else if(playedCount > 0) status = 'status-part';
             }
-            btn.className = `course-btn ${statusClass}`;
-            btn.innerText = i + "코스";
+            btn.className = `course-btn ${status}`;
+            btn.innerHTML = `${i}코스<br><small style="font-weight:normal;">${status==='status-all'?'완료':(status==='status-part'?'진행중':'미진행')}</small>`;
             btn.onclick = () => startCourse(i);
             container.appendChild(btn);
         }
@@ -216,7 +274,6 @@
     function startCourse(cIdx) {
         state.currentCourse = cIdx;
         state.currentHole = 1;
-        state.penalty = parseInt(document.getElementById('penalty-input').value) || 500;
         if(!state.courseData[cIdx]) {
             state.courseData[cIdx] = Array(10).fill(null).map(() => ({ winners: [], draw: false, fail: false }));
         }
@@ -229,19 +286,17 @@
         const hIdx = state.currentHole;
         const data = state.courseData[cIdx][hIdx];
         document.getElementById('display-hole-title').innerText = `${cIdx}코스 - ${hIdx}홀`;
-        
         const indicator = document.getElementById('hole-indicator');
         indicator.innerHTML = '';
         for(let i=1; i<=9; i++) {
             const dot = document.createElement('div');
             const hData = state.courseData[cIdx][i];
-            const isPlayed = (hData.winners.length > 0 || hData.draw || hData.fail);
-            dot.className = `hole-dot ${i === hIdx ? 'active' : ''} ${isPlayed ? 'played' : ''}`;
+            const played = hData && (hData.winners?.length > 0 || hData.draw || hData.fail);
+            dot.className = `hole-dot ${i === hIdx ? 'active' : ''} ${played ? 'played' : ''}`;
             dot.innerText = i;
             dot.onclick = () => { state.currentHole = i; updatePlayUI(); };
             indicator.appendChild(dot);
         }
-
         const pContainer = document.getElementById('play-player-btns');
         pContainer.innerHTML = '';
         state.selectedIdx.forEach(idx => {
@@ -251,15 +306,9 @@
             btn.onclick = () => toggleWinner(idx);
             pContainer.appendChild(btn);
         });
-
         document.getElementById('spec-draw').className = `p-btn ${data.draw ? 'selected' : ''}`;
         document.getElementById('spec-fail').className = `p-btn ${data.fail ? 'selected' : ''}`;
-        saveToLocal();
-    }
-
-    function changeHole(dir) {
-        const nextH = state.currentHole + dir;
-        if(nextH >= 1 && nextH <= 9) { state.currentHole = nextH; updatePlayUI(); }
+        saveState();
     }
 
     function toggleWinner(idx) {
@@ -278,109 +327,55 @@
         updatePlayUI();
     }
 
-    function getStats(coursesObj, pVal, selArr) {
-        let stats = {};
-        selArr.forEach(i => stats[i] = { win:0, draw:0, fail:0, pCount:0 });
-        let totalH = 0;
-        Object.keys(coursesObj).forEach(cId => {
-            for(let i=1; i<=9; i++) {
-                const h = coursesObj[cId][i];
-                if(h.winners.length === 0 && !h.draw && !h.fail) continue;
-                totalH++;
-                if(h.draw) selArr.forEach(idx => stats[idx].draw++);
-                else if(h.fail) selArr.forEach(idx => { stats[idx].fail++; stats[idx].pCount++; });
-                else {
-                    selArr.forEach(idx => {
-                        if(h.winners.includes(idx)) stats[idx].win++;
-                        else stats[idx].pCount++;
-                    });
-                }
-            }
-        });
-        return { stats, totalH };
-    }
-
-    function renderResultItem(idx, s, pBase) {
-        return `
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:15px; margin-bottom:10px;">
-                <div style="flex:1;">
-                    <span style="font-size:18px; font-weight:bold; color:#333;">${state.players[idx]}</span>
-                    <div class="badge-group">
-                        <span class="g-badge g-win">🏆 1등 ${s.win}</span>
-                        <span class="g-badge g-draw">🤝 무승부 ${s.draw}</span>
-                        <span class="g-badge g-fail">💀 실패 ${s.fail}</span>
-                    </div>
-                </div>
-                <div class="penalty-highlight">
-                    <span class="penalty-label">벌금홀수</span>
-                    <span class="penalty-val">${s.pCount}회</span>
-                    <span style="font-size:14px; font-weight:bold; margin-top:2px; display:block;">${(s.pCount * pBase).toLocaleString()}원</span>
-                </div>
-            </div>`;
+    function changeHole(dir) {
+        let next = state.currentHole + dir;
+        if(next >= 1 && next <= 9) { state.currentHole = next; updatePlayUI(); }
     }
 
     function showResult() {
-        const obj = {}; obj[state.currentCourse] = state.courseData[state.currentCourse];
-        const { stats, totalH } = getStats(obj, state.penalty, state.selectedIdx);
+        const selPlayers = state.selectedIdx;
+        let stats = {};
+        selPlayers.forEach(i => stats[i] = { pCount:0 });
+        Object.values(state.courseData[state.currentCourse]).forEach(hole => {
+            if(!hole || (hole.winners.length === 0 && !hole.draw && !hole.fail)) return;
+            if(hole.fail) selPlayers.forEach(idx => stats[idx].pCount++);
+            else if(!hole.draw) {
+                selPlayers.forEach(idx => { if(!hole.winners.includes(idx)) stats[idx].pCount++; });
+            }
+        });
         const container = document.getElementById('result-list');
-        container.innerHTML = `<div style="text-align:center; font-weight:bold; color:var(--primary); margin-bottom:15px;">${state.currentCourse}코스 중간집계 (${totalH}홀)</div>`;
-        state.selectedIdx.forEach(idx => { container.innerHTML += renderResultItem(idx, stats[idx], state.penalty); });
+        container.innerHTML = `<h3>${state.currentCourse}코스 정산</h3>`;
+        selPlayers.forEach(idx => {
+            const p = stats[idx].pCount;
+            container.innerHTML += `
+                <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:18px; font-weight:bold;">${state.players[idx]}</div>
+                    <div style="background:#fff5f5; border:2px solid #d32f2f; color:#d32f2f; padding:10px; border-radius:15px; text-align:center;">
+                        <strong>${(p * state.penalty).toLocaleString()}원</strong>
+                    </div>
+                </div>`;
+        });
         showScreen('result');
     }
 
-    function saveCurrentGame(alertUser) {
-        const today = new Date().toLocaleDateString();
-        let history = JSON.parse(localStorage.getItem('parkGolf_history_v5')) || [];
-        let dayRec = history.find(h => h.date === today);
-        if(!dayRec) {
-            dayRec = { date: today, courses: {}, penalty: state.penalty, players: [...state.players], selected: [...state.selectedIdx] };
-            history.push(dayRec);
-        }
-        dayRec.courses[state.currentCourse] = JSON.parse(JSON.stringify(state.courseData[state.currentCourse]));
-        localStorage.setItem('parkGolf_history_v5', JSON.stringify(history));
-        saveToLocal();
-        if(alertUser) alert("저장되었습니다.");
+    function saveCurrentGame(isManual) {
+        saveState();
+        if(isManual) alert("저장되었습니다.");
     }
 
     function nextCourseAction() {
-        saveCurrentGame(false); // 저장 확인창(alert) 없이 저장만 수행
         showScreen('game-setup');
     }
 
     function renderHistory() {
-        const history = JSON.parse(localStorage.getItem('parkGolf_history_v5')) || [];
-        const container = document.getElementById('history-container');
-        container.innerHTML = '';
-        history.forEach((day, dIdx) => {
-            const { stats, totalH } = getStats(day.courses, day.penalty, day.selected);
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.style = "border-left: 8px solid var(--primary); padding:15px;";
-            card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <strong style="font-size:18px;">📅 ${day.date}</strong>
-                <button onclick="deleteHistory(${dIdx})" style="color:var(--danger); border:none; background:none; font-weight:bold;">기록삭제</button>
-            </div>
-            <div style="font-size:12px; color:#777; margin-bottom:10px;">총 ${Object.keys(day.courses).length}코스 플레이 (${totalH}홀)</div>`;
-            day.selected.forEach(idx => { card.innerHTML += renderResultItem(idx, stats[idx], day.penalty); });
-            container.appendChild(card);
-        });
-    }
-
-    function deleteHistory(idx) {
-        if(confirm("이 기록을 삭제할까요?")) {
-            let history = JSON.parse(localStorage.getItem('parkGolf_history_v5'));
-            history.splice(idx, 1);
-            localStorage.setItem('parkGolf_history_v5', JSON.stringify(history));
-            renderHistory();
-        }
+        document.getElementById('history-container').innerHTML = '<h3 style="text-align:center; padding:20px;">누적 기록 서비스 준비 중...</h3>';
     }
 
     function exitApp() {
-        saveToLocal();
-        if(confirm("데이터를 저장하고 종료하시겠습니까?")) window.location.href = "about:blank";
+        if(confirm("종료하시겠습니까?")) {
+            document.getElementById('exit-overlay').classList.remove('hidden');
+        }
     }
-
-    init();
 </script>
 </body>
 </html>
