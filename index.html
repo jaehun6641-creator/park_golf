@@ -3,101 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>독수리 파크골프 v5.8</title>
+    <title>독수리 파크골프 v6.1</title>
     <style>
         :root {
             --primary: #1b5e20;
             --gold: #d4af37;
-            --gold-light: #f9e29d;
             --bg: #f4f7f6;
-            --played-all: #ffd600; 
+            --danger: #d32f2f;
             --accent: #1976d2;
         }
 
-        body { font-family: 'Pretendard', -apple-system, sans-serif; margin: 0; background: var(--bg); color: #212121; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+        /* [모바일 최적화] 전체 높이를 고정하고 내부 스크롤을 유도 */
+        body { 
+            font-family: 'Pretendard', -apple-system, sans-serif; 
+            margin: 0; background: var(--bg); color: #212121; 
+            height: 100vh; display: flex; flex-direction: column;
+            overflow: hidden; /* 바깥쪽 스크롤 방지 */
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        /* --- [모바일 최적화] 소개 화면 스타일 --- */
+        /* --- [유지] 소개 화면 (v5.9 스타일) --- */
         #intro-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(160deg, #1b5e20 0%, #0a3d12 100%);
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between; /* 위아래 균형 배치 */
-            z-index: 11000; text-align: center; color: white; transition: opacity 0.8s ease;
-            padding: 50px 20px; box-sizing: border-box; /* 패딩 추가 */
+            display: flex; flex-direction: column; align-items: center;
+            z-index: 11000; text-align: center; color: white; transition: opacity 0.6s ease;
+            padding: 40px 20px; box-sizing: border-box;
         }
-        
         .intro-content { flex: 1; display: flex; flex-direction: column; justify-content: center; width: 100%; }
-
-        .intro-visual {
-            font-size: clamp(80px, 20vw, 120px); /* 화면 크기에 맞게 조절 */
-            margin-bottom: 10px; 
-            filter: drop-shadow(0 0 15px rgba(212,175,55,0.5));
-            animation: float 3s infinite ease-in-out;
-        }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-
-        .intro-title { 
-            font-size: clamp(32px, 10vw, 48px); /* 모바일 대응 폰트 크기 */
-            font-weight: 900; letter-spacing: -1.5px; margin: 0 0 10px 0;
-            background: linear-gradient(to bottom, #ffffff, #d4af37);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        .intro-msg { 
-            font-size: clamp(18px, 5vw, 24px); 
-            font-weight: 300; margin-bottom: 40px; line-height: 1.5;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            white-space: nowrap; /* 줄바꿈 방지 */
-        }
-
+        .intro-visual { font-size: 70px; margin-bottom: 10px; animation: float 3s infinite ease-in-out; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .intro-title { font-size: 32px; font-weight: 900; color: var(--gold); margin: 0 0 10px; }
+        .intro-msg { font-size: 18px; margin-bottom: 35px; opacity: 0.9; line-height: 1.5; }
         .btn-start { 
-            width: 100%; max-width: 280px; /* 모바일에서 적절한 너비 */
-            padding: 20px 0; border-radius: 50px; border: none;
+            width: 85%; max-width: 240px; padding: 16px 0; border-radius: 40px; border: none;
             background: linear-gradient(45deg, #d4af37, #f9e29d, #d4af37);
-            background-size: 200% auto;
-            color: #1b5e20; font-size: 22px; font-weight: 900; 
-            margin: 0 auto; cursor: pointer; transition: all 0.3s;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-            animation: pulse 2s infinite, shine 3s infinite linear;
+            color: #1b5e20; font-size: 19px; font-weight: 900; cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3); margin: 0 auto;
         }
+        .intro-footer { flex-shrink: 0; font-size: 12px; opacity: 0.6; padding-top: 20px; }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.03); }
-            100% { transform: scale(1); }
-        }
-        @keyframes shine { to { background-position: 200% center; } }
-
-        .btn-start:active { transform: scale(0.95); opacity: 0.9; }
-
-        .intro-footer {
-            width: 100%; font-size: 13px; opacity: 0.7; padding-top: 20px;
-        }
-        .intro-footer strong { color: var(--gold); }
-
-        /* --- 앱 화면 숨김 설정 --- */
-        .hidden { display: none !important; }
-        #app { height: 100vh; display: flex; flex-direction: column; }
-        header { background: var(--primary); color: white; flex-shrink: 0; }
-        nav { display: flex; justify-content: space-around; }
-        nav button { background: none; border: none; color: rgba(255,255,255,0.7); padding: 15px; font-weight: bold; font-size: 16px; flex: 1; }
+        /* --- [수정] 게임 메인 레이아웃 (잘림 방지) --- */
+        #app { height: 100vh; display: flex; flex-direction: column; width: 100%; }
+        header { background: var(--primary); color: white; flex-shrink: 0; z-index: 1000; }
+        nav { display: flex; width: 100%; }
+        nav button { background: none; border: none; color: rgba(255,255,255,0.7); padding: 15px 5px; font-weight: bold; font-size: 15px; flex: 1; }
         nav button.active { color: white; border-bottom: 4px solid var(--gold); }
-        .container { padding: 15px; max-width: 480px; margin: 0 auto; flex: 1; overflow-y: auto; }
-        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+
+        /* 스크롤 핵심 영역 */
+        .container { 
+            flex: 1; overflow-y: auto; /* 컨텐츠가 길어지면 내부에서 스크롤 */
+            padding: 15px; box-sizing: border-box; width: 100%; max-width: 480px; margin: 0 auto;
+            -webkit-overflow-scrolling: touch; 
+        }
         
-        /* (나머지 스타일은 v5.7과 동일 유지) */
+        .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .hidden { display: none !important; }
+
+        /* 게임 UI 요소 최적화 */
         .course-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .course-btn { padding: 10px 5px; border: 1.5px solid #ddd; border-radius: 15px; font-weight: bold; height: 70px; cursor: pointer; font-size: 14px; }
-        .course-btn.status-all { background: #ffd600; }
-        .course-btn.status-part { background: #f8bbd0; }
+        .course-btn { padding: 10px; border: 1.5px solid #ddd; border-radius: 12px; font-weight: bold; height: 70px; background: #fff; font-size: 14px; cursor: pointer; }
+        .course-btn.status-all { background: #ffd600; border-color: #fbc02d; }
+        .course-btn.status-part { background: #f8bbd0; border-color: #f06292; }
+
         .hole-indicator { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin-bottom: 15px; }
-        .hole-dot { aspect-ratio: 1/1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; background: #eee; border: 1.1px solid #ddd; }
-        .hole-dot.active { border-color: var(--primary); background: white; color: var(--primary); }
-        .hole-dot.played { background: #ffd600; }
-        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn-big { height: 50px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        .hole-dot { aspect-ratio: 1/1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; background: #eee; border: 1px solid #ddd; font-weight: bold; }
+        .hole-dot.active { border-color: var(--primary); background: white; color: var(--primary); border-width: 2px; }
+        .hole-dot.played { background: #ffd600; border-color: #fbc02d; }
+
         .player-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .p-btn { padding: 12px; border: 1.5px solid #eee; background: #fafafa; border-radius: 15px; font-size: 14px; }
+        .p-btn { padding: 12px; border: 1.5px solid #eee; background: #fafafa; border-radius: 12px; font-size: 15px; text-align: center; }
         .p-btn.selected { background: #ffd600; font-weight: 800; border-color: #fbc02d; }
+
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .btn-big { height: 50px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -106,88 +85,72 @@
     <div class="intro-content">
         <div class="intro-visual">🦅</div>
         <h1 class="intro-title">독수리 파크골프</h1>
-        <p class="intro-msg">
-            반갑습니다!<br>
-            <strong>즐거운 시간이 되시길 바랍니다</strong>
-        </p>
-        <button class="btn-start" onclick="closeIntro()">게임을 시작합니다.</button>
+        <p class="intro-msg">최고의 라운딩 파트너<br><strong>벌금 매니지먼트 시스템</strong></p>
+        <button class="btn-start" onclick="closeIntro()">프로그램 시작</button>
     </div>
-
-    <div class="intro-footer">
-        Version 5.8 Eagle Pro<br>
-        Copyright © 2026. Created by <strong>오재훈</strong>
-    </div>
+    <div class="intro-footer">Version 6.1 Eagle Pro Edition<br>Created by <strong>오재훈</strong></div>
 </div>
 
 <div id="app" class="hidden">
-    <header id="app-header">
+    <header>
         <nav>
             <button onclick="showScreen('player')" id="nav-player">플레이어</button>
             <button onclick="showScreen('game-setup')" id="nav-game">코스선택</button>
-            <button onclick="showScreen('records')" id="nav-records">기록</button>
+            <button onclick="showScreen('records')" id="nav-records">기록보기</button>
             <button onclick="exitApp()">종료</button>
         </nav>
     </header>
 
-    <div class="container" id="app-body">
+    <div class="container">
         <section id="screen-player" class="screen">
-            <h3 style="margin: 0 0 15px 5px;">플레이어 등록</h3>
+            <h3 style="margin: 5px 0 15px;">멤버 등록</h3>
             <div id="player-inputs"></div>
         </section>
 
         <section id="screen-game-setup" class="screen hidden">
             <div class="card">
-                <label style="font-weight: bold;">홀당 벌금액</label>
-                <div style="margin-top:10px; display: flex; align-items: center; gap: 10px;">
-                    <input type="number" id="penalty-input" style="flex:1; padding:12px; border:2px solid var(--primary); border-radius:10px; font-size:20px; font-weight:bold; text-align: right;">
-                    <span style="font-size: 18px; font-weight:bold;">원</span>
-                </div>
+                <label style="font-weight: bold; font-size: 14px;">홀당 벌금액 (원)</label>
+                <input type="number" id="penalty-input" style="width:100%; padding:12px; border:2px solid var(--primary); border-radius:10px; font-size:18px; box-sizing:border-box; margin-top:8px; text-align: right; font-weight: bold;">
             </div>
             <div class="course-grid" id="course-btns"></div>
         </section>
 
         <section id="screen-game-play" class="screen hidden">
             <div class="hole-indicator" id="hole-indicator"></div>
-            <h2 id="display-hole-title" style="margin-top:0; color: var(--primary); font-size: 20px;">1코스 - 1홀</h2>
+            <h3 id="display-hole-title" style="margin:0 0 10px; color:var(--primary); font-size: 20px;">1코스 - 1홀</h3>
             <div class="btn-row">
-                <button onclick="changeHole(-1)" class="btn-big" style="background: #e8f5e9; color: var(--primary);">◀ 이전홀</button>
-                <button onclick="changeHole(1)" class="btn-big" style="background: #e8f5e9; color: var(--primary);">다음홀 ▶</button>
+                <button onclick="changeHole(-1)" class="btn-big" style="background:#e8f5e9; color: var(--primary);">◀ 이전홀</button>
+                <button onclick="changeHole(1)" class="btn-big" style="background:#e8f5e9; color: var(--primary);">다음홀 ▶</button>
             </div>
-            <div class="card">
+            <div class="card" style="margin-top:15px;">
                 <div id="play-player-btns" class="player-grid"></div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 15px; border-top: 1px dashed #ddd; margin-top:15px;">
+                <div class="btn-row" style="margin-top:15px; border-top:1px dashed #ddd; padding-top:15px;">
                     <button class="p-btn" id="spec-draw" onclick="toggleSpecial('draw')">🤝 무승부</button>
                     <button class="p-btn" id="spec-fail" onclick="toggleSpecial('fail')">💀 모두실패</button>
                 </div>
             </div>
             <div class="btn-row">
-                <button onclick="showResult()" class="btn-big" style="background:#546e7a; color:white;">📊 결과</button>
-                <button onclick="saveCurrentGame(true)" class="btn-big" style="background:var(--accent); color:white;">💾 저장</button>
+                <button onclick="showResult()" class="btn-big" style="background:#546e7a; color:white;">📊 코스결과</button>
+                <button onclick="saveCurrentGame(true)" class="btn-big" style="background:var(--accent); color:white;">💾 현재저장</button>
             </div>
-            <button onclick="nextCourseAction()" class="btn-big" style="background:#455a64; color:white; width: 100%; margin-top: 10px; height: 55px;">⛳ 코스 완료 후 목록으로</button>
+            <button onclick="showScreen('game-setup')" class="btn-big" style="width:100%; margin-top:10px; background:#455a64; color:white;">⛳ 코스 완료 후 목록으로</button>
         </section>
 
         <section id="screen-result" class="screen hidden">
             <div id="result-list"></div>
-            <button onclick="showScreen('game-play')" class="btn-big" style="background:var(--accent); color:white; width:100%; margin-top:10px;">게임으로</button>
+            <button onclick="showScreen('game-play')" class="btn-big" style="width:100%; background:var(--accent); color:white; margin-top:10px;">게임 화면으로</button>
         </section>
 
         <section id="screen-records" class="screen hidden">
             <div id="history-container"></div>
         </section>
     </div>
-
-    <div id="exit-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--primary); color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:12000;">
-        <h1 style="font-size: 50px;">⛳</h1>
-        <h2>데이터 저장 완료</h2>
-        <p>프로그램을 종료합니다.</p>
-        <button onclick="location.reload()" style="margin-top:30px; padding:15px 40px; border-radius:30px; border:none; font-weight:bold; background:white; color:var(--primary);">다시 시작하기</button>
-    </div>
 </div>
 
 <script>
+    /* v5.4 원본 로직 유지 */
     let state = {
-        players: ["플레이어1", "플레이어2", "플레이어3", "플레이어4", "", ""],
+        players: ["선수1", "선수2", "선수3", "선수4", "", ""],
         selectedIdx: [0, 1, 2, 3],
         penalty: 500,
         currentCourse: 1,
@@ -196,26 +159,25 @@
     };
 
     function closeIntro() {
-        const intro = document.getElementById('intro-screen');
-        intro.style.opacity = '0';
+        document.getElementById('intro-screen').style.opacity = '0';
         setTimeout(() => {
-            intro.classList.add('hidden');
+            document.getElementById('intro-screen').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
             init();
         }, 600);
     }
 
     function init() {
-        const saved = localStorage.getItem('parkGolf_v5_8');
+        const saved = localStorage.getItem('parkGolf_v6_1');
         if(saved) state = Object.assign(state, JSON.parse(saved));
-        document.getElementById('penalty-input').value = state.penalty || 500;
+        document.getElementById('penalty-input').value = state.penalty;
         renderPlayerSetup();
         showScreen('player');
     }
 
     function saveState() {
-        state.penalty = parseInt(document.getElementById('penalty-input').value) || 500;
-        localStorage.setItem('parkGolf_v5_8', JSON.stringify(state));
+        state.penalty = parseInt(document.getElementById('penalty-input').value) || 0;
+        localStorage.setItem('parkGolf_v6_1', JSON.stringify(state));
     }
 
     function showScreen(id) {
@@ -226,7 +188,7 @@
         if(navBtn) navBtn.classList.add('active');
         if(id === 'game-setup') renderCourseBtns();
         if(id === 'records') renderHistory();
-        window.scrollTo(0,0);
+        document.querySelector('.container').scrollTop = 0;
     }
 
     function renderPlayerSetup() {
@@ -237,7 +199,7 @@
             div.className = 'card';
             div.style = "display:flex; gap:12px; align-items:center; padding:12px; margin-bottom:8px;";
             div.innerHTML = `
-                <input type="text" value="${name}" onchange="state.players[${i}]=this.value; saveState();" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:10px; font-size:16px;">
+                <input type="text" value="${name}" onchange="state.players[${i}]=this.value; saveState();" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:16px;">
                 <input type="checkbox" style="width:25px; height:25px;" ${state.selectedIdx.includes(i) ? 'checked' : ''} onchange="togglePlayer(${i})">
             `;
             container.appendChild(div);
@@ -263,7 +225,7 @@
                 else if(playedCount > 0) status = 'status-part';
             }
             btn.className = `course-btn ${status}`;
-            btn.innerHTML = `${i}코스<br><small style="font-weight:normal;">${status==='status-all'?'완료':(status==='status-part'?'진행':'미진')}</small>`;
+            btn.innerHTML = `${i}코스<br><small style="font-weight:normal;">${status==='status-all'?'완료':(status==='status-part'?'진행중':'미진행')}</small>`;
             btn.onclick = () => startCourse(i);
             container.appendChild(btn);
         }
@@ -272,7 +234,9 @@
     function startCourse(cIdx) {
         state.currentCourse = cIdx;
         state.currentHole = 1;
-        if(!state.courseData[cIdx]) state.courseData[cIdx] = Array(10).fill(null).map(() => ({ winners: [], draw: false, fail: false }));
+        if(!state.courseData[cIdx]) {
+            state.courseData[cIdx] = Array(10).fill(null).map(() => ({ winners: [], draw: false, fail: false }));
+        }
         showScreen('game-play');
         updatePlayUI();
     }
@@ -335,27 +299,26 @@
         Object.values(state.courseData[state.currentCourse]).forEach(hole => {
             if(!hole || (hole.winners.length === 0 && !hole.draw && !hole.fail)) return;
             if(hole.fail) selPlayers.forEach(idx => stats[idx].pCount++);
-            else if(!hole.draw) { selPlayers.forEach(idx => { if(!hole.winners.includes(idx)) stats[idx].pCount++; }); }
+            else if(!hole.draw) {
+                selPlayers.forEach(idx => { if(!hole.winners.includes(idx)) stats[idx].pCount++; });
+            }
         });
         const container = document.getElementById('result-list');
-        container.innerHTML = `<h3>${state.currentCourse}코스 정산</h3>`;
+        container.innerHTML = `<h3 style="margin-bottom:15px;">${state.currentCourse}코스 정산</h3>`;
         selPlayers.forEach(idx => {
             const p = stats[idx].pCount;
             container.innerHTML += `
-                <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:15px;">
+                <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="font-size:16px; font-weight:bold;">${state.players[idx]}</div>
-                    <div style="background:#fff5f5; border:1px solid #d32f2f; color:#d32f2f; padding:8px 15px; border-radius:10px;">
-                        <strong>${(p * state.penalty).toLocaleString()}원</strong>
-                    </div>
+                    <div style="color:var(--danger); font-weight:bold; font-size:18px;">${(p * state.penalty).toLocaleString()}원</div>
                 </div>`;
         });
         showScreen('result');
     }
 
     function saveCurrentGame(isManual) { saveState(); if(isManual) alert("저장되었습니다."); }
-    function nextCourseAction() { showScreen('game-setup'); }
-    function renderHistory() { document.getElementById('history-container').innerHTML = '<h3 style="text-align:center; padding:20px;">누적 기록 준비 중...</h3>'; }
-    function exitApp() { if(confirm("종료하시겠습니까?")) document.getElementById('exit-overlay').classList.remove('hidden'); }
+    function renderHistory() { document.getElementById('history-container').innerHTML = '<p style="text-align:center; padding:50px;">누적 기록 기능을 구현 중입니다.</p>'; }
+    function exitApp() { if(confirm("종료하시겠습니까?")) location.reload(); }
 </script>
 </body>
 </html>
