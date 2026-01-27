@@ -76,7 +76,7 @@
     <div class="intro-content">
         <div class="intro-visual">🦅</div>
         <h1 class="intro-title">독수리 파크골프</h1>
-        <p class="intro-msg">반갑습니다!<br><strong>최고의 라운딩 파트너</strong></p>
+        <p class="intro-msg">반갑습니다!<br><strong>최고의 라운딩 벌금 계산 파트너</strong></p>
         <button class="btn-start" onclick="startApp()">프로그램 시작</button>
     </div>
     <div class="intro-footer">Version 1.1 Final | Created by <strong>오재훈</strong></div>
@@ -85,8 +85,8 @@
 <div id="app-main" class="hidden">
     <header id="app-header">
         <nav>
-            <button onclick="showScreen('player')" id="nav-player">플레이어</button>
-            <button onclick="showScreen('game-setup')" id="nav-game">코스선택</button>
+            <button onclick="showScreen('player')" id="nav-player">등록</button>
+            <button onclick="showScreen('game-setup')" id="nav-game">게임</button>
             <button onclick="showScreen('records')" id="nav-records">기록</button>
             <button onclick="exitApp()">종료</button>
         </nav>
@@ -104,7 +104,7 @@
             <div class="btn-row"><button onclick="changeHole(-1)" class="btn-big btn-nav">◀ 이전홀</button><button onclick="changeHole(1)" class="btn-big btn-nav">다음홀 ▶</button></div>
             <div class="card"><div id="play-player-btns" class="player-grid"></div><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 15px; border-top: 1px dashed #ddd;"><button class="p-btn" id="spec-draw" onclick="toggleSpecial('draw')">🤝 무승부</button><button class="p-btn" id="spec-fail" onclick="toggleSpecial('fail')">💀 모두실패</button></div></div>
             <div class="btn-row"><button onclick="showResult()" class="btn-big btn-result">📊 코스결과</button><button onclick="saveCurrentGame(true)" class="btn-big btn-save">💾 현재저장</button></div>
-            <button onclick="nextCourseAction()" class="btn-big btn-next-course">⛳ 코스 완료 후 목록으로</button>
+            <button onclick="nextCourseAction()" class="btn-big btn-next-course">⛳ 다음 코스로~~~</button>
         </section>
         <section id="screen-result" class="screen hidden"><div id="result-list"></div><button onclick="showScreen('game-play')" class="btn-big btn-save" style="width:100%; margin-top:10px;">게임 화면으로</button></section>
         <section id="screen-records" class="screen hidden"><div id="history-container"></div></section>
