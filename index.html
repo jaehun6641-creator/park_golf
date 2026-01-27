@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>파크골프 프로 v5.5 (Final Edition)</title>
+    <title>파크골프 프로 v5.5 Final</title>
     <style>
         /* --- 소개 화면 스타일 --- */
         #intro-screen {
@@ -64,8 +64,8 @@
         .g-win { background: #fff3e0; color: var(--win-color); border: 1px solid #ffe0b2; }
         .g-draw { background: #eceff1; color: var(--draw-color); border: 1px solid #cfd8dc; }
         .g-fail { background: #efebe9; color: var(--fail-color); border: 1px solid #d7ccc8; }
-        .penalty-highlight { background: #fff5f5; border: 2.5px solid var(--danger); color: var(--danger); padding: 10px; border-radius: 15px; text-align: center; min-width: 90px; }
-        .penalty-val { font-size: 14px; font-weight: 900; display: block; }
+        .penalty-highlight { background: #fff5f5; border: 2.5px solid var(--danger); color: var(--danger); padding: 10px; border-radius: 15px; text-align: center; min-width: 100px; }
+        .penalty-val { font-size: 13px; font-weight: 900; display: block; }
         .hidden { display: none !important; }
         #exit-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; text-align: center; }
     </style>
@@ -79,7 +79,7 @@
         <p class="intro-msg">반갑습니다!<br><strong>최고의 라운딩 파트너</strong></p>
         <button class="btn-start" onclick="startApp()">프로그램 시작</button>
     </div>
-    <div class="intro-footer">Version 1.0 Final | Created by <strong>오재훈</strong></div>
+    <div class="intro-footer">Version 1.1 Final | Created by <strong>오재훈</strong></div>
 </div>
 
 <div id="app-main" class="hidden">
@@ -240,7 +240,7 @@
         
         Object.values(cData).forEach(hole => {
             if(!hole || (hole.winners.length === 0 && !hole.draw && !hole.fail)) return;
-            stats.playedHoles++; // 실제 게임한 홀수 카운트
+            stats.playedHoles++; 
             if(hole.draw) selPlayers.forEach(idx => stats[idx].draw++);
             else if(hole.fail) selPlayers.forEach(idx => { stats[idx].fail++; stats[idx].pCount++; });
             else { selPlayers.forEach(idx => { if(hole.winners.includes(idx)) stats[idx].win++; else stats[idx].pCount++; }); }
@@ -251,7 +251,6 @@
     function showResult() {
         const stats = getSummary(state.courseData[state.currentCourse], state.penalty, state.selectedIdx);
         const container = document.getElementById('result-list'); 
-        // [수정] (총 ?회)가 게임한 홀수를 나타내도록 변경
         container.innerHTML = `<h3>${state.currentCourse}코스 정산 결과 (총 ${stats.playedHoles}회)</h3>`;
         
         state.selectedIdx.forEach(idx => { 
@@ -261,14 +260,14 @@
                     <div>
                         <div style="font-weight:bold; font-size:18px;">${state.players[idx]}</div>
                         <div class="badge-group">
-                            <span class="g-badge g-win">🏆 ${s.win}</span>
-                            <span class="g-badge g-draw">🤝 ${s.draw}</span>
-                            <span class="g-badge g-fail">💀 ${s.fail}</span>
+                            <span class="g-badge g-win">🏆 1등 ${s.win}회</span>
+                            <span class="g-badge g-draw">🤝 무승부 ${s.draw}회</span>
+                            <span class="g-badge g-fail">💀 모두실패 ${s.fail}회</span>
                         </div>
                     </div>
                     <div class="penalty-highlight">
                         <span class="penalty-val">벌금 ${s.pCount}회</span>
-                        <strong>${(s.pCount * state.penalty).toLocaleString()}원</strong>
+                        <strong style="font-size:16px;">${(s.pCount * state.penalty).toLocaleString()}원</strong>
                     </div>
                 </div>`; 
         });
@@ -295,17 +294,21 @@
             const stats = getSummary(combinedData, day.penalty, day.selected);
             
             const div = document.createElement('div'); div.className = 'card'; div.style = "border-left: 8px solid var(--primary);";
-            // [수정] 날짜 뒤 (총 ?회)가 그날 전체 게임한 홀수를 나타내도록 변경
             div.innerHTML = `<div style="display:flex; justify-content:space-between;"><strong>📅 ${day.date} (총 ${stats.playedHoles}회)</strong><button onclick="deleteHistory(${dIdx})" style="color:var(--danger); border:none; background:none; font-weight:bold;">삭제</button></div>`;
             
             day.selected.forEach(idx => { 
                 const s = stats[idx]; 
                 div.innerHTML += `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid #eee;">
-                    <div>${day.players[idx]}<br><small>🏆${s.win} 🤝${s.draw} 💀${s.fail}</small></div>
+                    <div style="flex:1;">
+                        <div style="font-weight:bold;">${day.players[idx]}</div>
+                        <div style="font-size:11px; color:#666; margin-top:3px;">
+                            🏆 1등 ${s.win} / 🤝 무승부 ${s.draw} / 💀 모두실패 ${s.fail}
+                        </div>
+                    </div>
                     <div class="penalty-highlight" style="min-width:110px; padding:5px;">
-                        <span style="font-size:14px; font-weight:900;">벌금 ${s.pCount}회</span>
-                        <span style="font-size:15px; font-weight:900;">${(s.pCount * day.penalty).toLocaleString()}원</span>
+                        <span style="font-size:13px; font-weight:900;">벌금 ${s.pCount}회</span>
+                        <span style="font-size:14px; font-weight:900;">${(s.pCount * day.penalty).toLocaleString()}원</span>
                     </div>
                 </div>`; 
             });
